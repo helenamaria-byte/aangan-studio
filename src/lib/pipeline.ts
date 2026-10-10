@@ -39,7 +39,7 @@ function money(n: number) {
   return String(Math.round(n * 100) / 100);
 }
 
-function rowToEnquiry(row: CallRow): Enquiry {
+export function rowToEnquiry(row: CallRow): Enquiry {
   const f = (row.extractedFields ?? {}) as Partial<Enquiry>;
   return {
     channel: "phone",
@@ -178,15 +178,15 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
     await db.update(calls).set({ extractedFields: fieldsForStorage(e, repeatOfCallId) }).where(eq(calls.id, callId));
   }
 
-  // 1. Complaints first: Nikhil must hear within a minute.
-  let complaintContactId: string | null = null;
-  if (plan.emails.includes("complaint") && settings.ownerEmail) {
+  // 1. Complaints first: Nikhil must hear within a minute. The alert never waits on HubSpot (no contact link in it).
+  if (plan.emails.includes("complaint")) {
     const to = settings.ownerEmail;
-    complaintContactId = await failures.run("HubSpot lookup", () => hubspot.findContactByPhone(e.callerPhone));
-    const mail = buildComplaintEmail(e, complaintContactId ? hubspot.contactUrl(complaintContactId) : null);
-    await failures.run("Complaint email", () => sendEmail(to, mail));
-  } else if (plan.emails.includes("complaint")) {
-    failures.add("Complaint email: no owner email is set (OWNER_EMAIL or Settings)");
+    if (!to) {
+      failures.add("Complaint email: no owner email is set (OWNER_EMAIL or Settings)");
+    } else {
+      const mail = buildComplaintEmail(e, null);
+      await failures.run("Complaint email", () => sendEmail(to, mail));
+    }
   }
 
   // 2. HubSpot
@@ -213,7 +213,7 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
       hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality, declineReason: h.declineReason }),
     );
   } else if (h.kind === "note_on_existing") {
-    contactId = complaintContactId;
+    contactId ??= await failures.run("HubSpot lookup", () => hubspot.findContactByPhone(e.callerPhone));
     if (contactId) {
       const cid = contactId;
       await failures.run("HubSpot note", () => hubspot.addNote("contacts", cid, `Complaint call. ${noteText(e)}`));

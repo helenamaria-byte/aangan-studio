@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   // Respond fast; the slow work (HubSpot, email) runs after the response is sent.
   after(async () => {
     try {
-      await ingestVaaniCall(getDb(), payload);
+      await ingestVaaniCall(await getDb(), payload);
     } catch (err) {
       // Last resort: the raw payload is still in Vaani's own logs. This line is what shows in Vercel logs.
       console.error("Vaani webhook processing failed", err);

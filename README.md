@@ -4,7 +4,7 @@ Answers every call to the studio with a Vaani.ai voice agent, books a consultati
 
 The full requirements are in `aangan-build-spec.md`. This repo is built in the phase order given there.
 
-**Status:** Phases 1 (foundation), 2 (agent files) and 3 (call pipeline) are built. The dashboard (Phase 4) is next. The pipeline is tested with fixtures but has not yet run against live Neon, HubSpot, Resend, Vaani or Cal.com. See "Connecting the live services".
+**Status:** Phases 1 to 4 are built: foundation, agent files, call pipeline, and dashboard. Phase 5 (live test calls, weekly summary email, launch checks) is next. Everything is tested against fixtures and an in-memory database, but has not yet run against live Neon, HubSpot, Resend, Vaani or Cal.com. See "Connecting the live services".
 
 ## The one rule
 
@@ -44,6 +44,42 @@ The system never states a price. No number, range or per-square-foot figure. Pri
 4. Either webhook can arrive first. Whichever comes second sends the handoff email.
 5. Every external call is tried 3 times. If it still fails, the call is flagged `needs_attention` with the error. The lead is never lost.
 
+## The dashboard
+
+Sign in with an email link (no password). Who may sign in is set on the Settings page, or by `OWNER_EMAIL` and `FRONT_DESK_EMAIL` until then.
+
+| Page | Owner | Front desk |
+|---|---|---|
+| Home: one sentence, four numbers, needs attention, latest calls | everything | no pipeline value, no costs |
+| Calls: search, filters, CSV download | yes | yes, without the cost column |
+| Call detail | yes | yes, without costs |
+| Reports: six charts | yes | no |
+| Settings | yes | no |
+
+**Needs attention** lists complaints, qualified leads with no booking, dropped calls that need a callback, failed emails or CRM updates, and any booked call whose designer email has not gone out after 5 minutes. Each row has one action: Mark handled, Call back, or Retry.
+
+## Try it without any accounts
+
+The dashboard can run on an embedded local database with a month of demo data. This is for development only and is never used on Vercel.
+
+```bash
+npm install
+```
+Create `.env.local` with these lines (they are git-ignored):
+```
+DATABASE_URL=pglite://.pglite
+OWNER_EMAIL=you@example.test
+SEED_OWNER_EMAIL=you@example.test
+AUTH_SECRET=any-long-random-text-at-least-32-characters
+APP_URL=http://localhost:3000
+```
+Then:
+```bash
+npm run seed
+npm run dev
+```
+Open http://localhost:3000, enter your email, and the sign-in link is printed in the terminal (no email service needed locally). To use the real database instead, put your Neon address in `DATABASE_URL` and run `npm run seed` once if you want demo data. Demo rows are all marked `seed-` and `@example.invalid`, and running the seed again replaces only those.
+
 ## Connecting the live services
 
 Do these in order. Each has a quick check.
@@ -55,7 +91,12 @@ Do these in order. Each has a quick check.
 
 ## Tests
 
-`npm test` runs 87 checks, including one fake Vaani payload for each of the 20 September phone transcripts (`tests/fixtures/`). They cover outcomes, routing, email completeness, signature checks, retry, and phone matching.
+`npm test` runs 125 checks:
+
+- one fake Vaani payload for each of the 20 September phone transcripts (`tests/fixtures/`): outcomes, routing, and email completeness;
+- the full pipeline against a real in-memory Postgres with HubSpot and Resend faked: repeat deliveries, either webhook arriving first, retries, failures showing under Needs attention, and the complaint alert going out first;
+- every dashboard number, including cost = per-call costs + fixed costs, IST periods, Indian formats, and CSV safety;
+- sign-in link and session security.
 
 ## Secrets
 

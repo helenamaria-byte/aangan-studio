@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
-      await ingestCalcom(getDb(), parsed);
+      await ingestCalcom(await getDb(), parsed);
     } catch (err) {
       console.error("Cal.com webhook processing failed", err);
     }
