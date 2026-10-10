@@ -30,6 +30,7 @@ let existingContact: string | null = null; // HubSpot already has this phone num
 let hubspotDown = false;
 let resendDown = false;
 let missingDeclineProperty = false; // the custom HubSpot property has not been created yet
+let vaaniHistory: Record<string, unknown>[] = []; // rows returned by the fake Vaani call-history API
 
 function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = String(input);
@@ -37,6 +38,9 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
   const method = init?.method ?? "GET";
   const json = (o: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(o), { status }));
 
+  if (url.includes("api.vaanivoice.ai")) {
+    return json({ data: vaaniHistory, pagination: { page: 1, page_size: 200, has_next: false } });
+  }
   if (url.includes("api.resend.com")) {
     sent.push({ kind: "email", method, url, body });
     return resendDown ? json({ message: "down" }, 500) : json({ id: "e1" });
@@ -93,6 +97,8 @@ beforeEach(async () => {
   hubspotDown = false;
   resendDown = false;
   missingDeclineProperty = false;
+  vaaniHistory = [];
+  delete process.env.VAANI_API_KEY;
   const db = await getDb();
   await db.delete(bookings);
   await db.delete(calls);
@@ -228,6 +234,58 @@ describe("Vaani webhook pipeline", () => {
     expect(first.needsAttention).toBe(false);
     expect(first.handledAt).not.toBeNull();
   });
+});
+
+describe("Vaani's real call_postprocessing event", () => {
+  const doc = (over: Record<string, unknown> = {}) => ({
+    event: "call_postprocessing",
+    call_id: "inbound-doc-1",
+    timestamp: new Date(Date.now() - 60_000).toISOString(),
+    data: {
+      room_name: "room_1", call_id: "inbound-doc-1", call_duration: 180000, end_reason: "USER_DISCONNECT",
+      summary: "Declined: outside Pune.", recording_url: "https://api.vaanivoice.ai/api/stream/inbound-doc-1", transcript: "AGENT: hi",
+      entities: { caller_name: "Suresh", locality: "Nashik", property_type: "house", outcome: "declined", decline_reason: "out_of_area" },
+    },
+    ...over,
+  });
+
+  it("takes the caller's number and the cost from Vaani's call history, because the webhook has neither", async () => {
+    const db = await getDb();
+    process.env.VAANI_API_KEY = "k";
+    process.env.VAANI_CREDIT_TO_INR = "4";
+    vaaniHistory = [{ call_id: "inbound-doc-1", direction: "Incoming", from_number: "+919811112222", to_number: "+912000000000", call_cost: 2.5 }];
+    await ingestVaaniCall(db, doc());
+    delete process.env.VAANI_CREDIT_TO_INR;
+    const [row] = await db.select().from(calls);
+    expect(row.callerPhone).toBe("+919811112222"); // from_number, since the call was inbound
+    expect(Number(row.costTotalInr)).toBeCloseTo(10, 2); // 2.5 credits at 4 rupees
+    expect(row.durationSec).toBe(180);
+    expect(row.needsAttention).toBe(false);
+    expect(sent.find((s) => s.url.endsWith("/objects/contacts") && s.method === "POST")).toBeTruthy();
+  });
+
+  it("flags a call that has no phone number anywhere, and says how to fix it, but still saves it", async () => {
+    const db = await getDb();
+    const payload = doc();
+    delete (payload.data.entities as Record<string, unknown>).caller_phone;
+    await ingestVaaniCall(db, payload);
+    const [row] = await db.select().from(calls);
+    expect(row.outcome).toBe("declined");
+    expect(row.needsAttention).toBe(true);
+    expect(row.errorText).toMatch(/No caller phone number.*VAANI_API_KEY/);
+  });
+
+  it("if call history is down, the call is still saved with its spoken phone number and flagged", async () => {
+    const db = await getDb();
+    process.env.VAANI_API_KEY = "k"; // history returns no matching row, as when post-processing lags
+    const payload = doc();
+    (payload.data.entities as Record<string, unknown>).caller_phone = "+919833334444";
+    await ingestVaaniCall(db, payload);
+    const [row] = await db.select().from(calls);
+    expect(row.callerPhone).toBe("+919833334444");
+    expect(row.needsAttention).toBe(true);
+    expect(row.errorText).toMatch(/Vaani call history/);
+  }, 15_000);
 });
 
 describe("designer handoff: either webhook can arrive first", () => {

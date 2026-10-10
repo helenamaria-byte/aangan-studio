@@ -38,36 +38,69 @@ for (const f of readdirSync(kdir).filter((f) => f.endsWith(".md")).sort()) {
   knowledge.push(f);
 }
 
-// 3. Post-call fields, laid out as a table to copy into Vaani's analysis / extraction setup
-const fields = `POST-CALL FIELDS
-Add each of these as a field in Vaani's post-call analysis (also called "structured extraction" or "call analysis").
-Use the exact field names below. The app reads them by these names.
+// 3. Entity extraction fields (Vaani: Agent Config > Analysis > Entity extraction)
+const fields = `ENTITY EXTRACTION FIELDS
+In Vaani: Agent Config > your agent > Analysis tab > Entity extraction. Add each field below.
+Use the EXACT field name (left). Paste the instruction (right) as that field's extraction prompt.
+The app reads the results by these names, so a different spelling means that field is lost.
 
-caller_name        text      The caller's name. Null if not given.
-caller_phone       text      The caller's phone number, confirmed on the call. Use caller ID if not confirmed.
-locality           text      The Pune or PCMC area of the site.
-property_type      choice    One of: apartment, house, villa, office, clinic, other
-size_sqft          number    Carpet area in square feet. Null if unknown.
-scope_summary      text      What they want done, in one or two lines.
-timeline_text      text      When they want it done or started, in the caller's own words.
-decision_maker     choice    One of: yes, represented, unclear
-budget_mentioned   text      ONLY if the caller volunteered a figure. Null otherwise. The agent never asks.
-outcome            choice    One of: qualified_booked, qualified_no_booking, declined, complaint, dropped, spam_or_wrong_number
-decline_reason     choice    One of: advice_only, out_of_area, timeline, budget, out_of_scope_type, too_small, other. Null unless outcome is declined.
-doubts             text      Anything the designer should check: unclear decision-maker, repeat caller, unconfirmed area.
-language          text      The main language of the call.
-summary            text      Three sentences at most.
+caller_name
+  The caller's full name as they gave it. Null if not given.
 
-RULES TO PUT IN THE ANALYSIS INSTRUCTIONS
-- outcome is "qualified_booked" only if a booking was actually created in Cal.com during the call.
+caller_phone
+  The caller's mobile number as confirmed aloud on the call, with country code, for example +919812345678. Null if not given.
+
+locality
+  The Pune or PCMC area where the site is, for example Kothrud or Pimple Saudagar.
+
+property_type
+  Exactly one of: apartment, house, villa, office, clinic, other.
+
+size_sqft
+  The carpet area in square feet, as a plain number with no units. Null if the caller does not know.
+
+scope_summary
+  What they want done, in one or two short lines, for example "Kitchen, wardrobes and living room of a 3BHK".
+
+timeline_text
+  When they want the work finished or started, in the caller's own words.
+
+decision_maker
+  Exactly one of: yes (the caller decides), represented (the caller is calling for someone who decides), unclear.
+
+budget_mentioned
+  Only if the caller said a budget figure themselves, copy it as they said it. The agent never asks. Null otherwise.
+
+outcome
+  Exactly one of:
+    qualified_booked        a consultation was actually booked in Cal.com during the call
+    qualified_no_booking    a good lead, but no booking was made
+    declined                the studio politely declined (not a fit)
+    complaint               an existing client with a problem (never a lead)
+    dropped                 the call ended before enough was collected
+    spam_or_wrong_number    a sales call or wrong number
+
+decline_reason
+  Only when outcome is declined. Exactly one of: advice_only, out_of_area, timeline, budget, out_of_scope_type, too_small, other. Null otherwise.
+
+doubts
+  Anything the designer should check: the decision-maker is unclear, a repeat caller, an area not on the confirmed list, a rented flat. For a complaint, include the designer's name written like "designer Aryan".
+
+language
+  The main language of the call: English, Hindi or Marathi.
+
+summary
+  A summary in three sentences at most.
+
+RULES (put these in the extraction instructions, or the dispositions section)
+- outcome is "qualified_booked" only if a booking was really created during the call.
 - An existing client with a problem is always "complaint", never a lead.
 - A call that ends before enough was collected is "dropped".
 - Never invent a value. Use null when it was not said.
-- In summary or doubts for a complaint, include the designer's name if the caller gave it, written like: "designer Aryan".
 `;
-writeFileSync(join(OUT, "3-post-call-fields.txt"), fields);
+writeFileSync(join(OUT, "3-entity-extraction-fields.txt"), fields);
 
-// 4. Webhook (contains the secret)
+// 4. Webhook (contains the secret in the address)
 const env = Object.fromEntries(
   readFileSync(join(ROOT, ".env.vercel"), "utf8").split(/\r?\n/).filter((l) => l.includes("=")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
 );
@@ -75,59 +108,62 @@ const secret = env.VAANI_WEBHOOK_SECRET;
 if (!secret) throw new Error("VAANI_WEBHOOK_SECRET is not in .env.vercel");
 writeFileSync(
   join(OUT, "4-webhook-SECRET.txt"),
-  `END-OF-CALL WEBHOOK  (keep this file private: it contains a secret)
+  `WEBHOOK ADDRESS  (keep this file private: the address contains a secret)
 
-Event:   end of call (call completed / call ended)
-Method:  POST
-URL:     ${SITE}/api/webhooks/vaani
+In Vaani: Settings > Webhooks > add this URL. Select all events if it asks.
+The app only acts on the final event (call_postprocessing) and quietly ignores the rest.
 
-Authentication. Use whichever your Vaani webhook screen offers:
-  A) A custom header
-       Header name:   x-vaani-secret
-       Header value:  ${secret}
-  B) A "signing secret" that Vaani uses to sign the body (HMAC SHA-256, sent in a header such as x-vaani-signature)
-       Secret:        ${secret}
+${SITE}/api/webhooks/vaani?token=${secret}
 
-The payload should include: call id, start and end time, duration in seconds, caller phone number,
-recording URL, transcript (text) and transcript URL, cost (with currency), and the post-call fields from file 3.
+Vaani does not document webhook signatures or custom headers, so the secret travels in the address itself.
+Anyone who knows this full address can send calls to your system, so do not share it or paste it in chat.
 `,
 );
 
-// 5. Setup guide
+// 5. Setup guide, following Vaani's own screens (docs.vaanivoice.ai)
 writeFileSync(
   join(OUT, "0-START-HERE.txt"),
-  `VAANI SETUP: paste pack for Aangan Studio
+  `VAANI SETUP: paste pack for Aangan Studio  (app.vaanivoice.ai)
 
 Do these in order. Each file in this folder is one paste or one upload.
 
-1. Create an agent in Vaani. Name it "Aangan Studio front desk".
-   Languages: English, Hindi, Marathi, with automatic switching.
-   It must answer 24 hours a day, every day.
+1. CREATE THE AGENT
+   Design > Agents > "+ New Agent" > "Build from Scratch". Name it "Aangan Studio front desk".
+   Pick a voice in Voice Lab that suits Indian English. If there is a language option, choose English with Hindi and Marathi.
 
-2. SYSTEM PROMPT  ->  open 1-system-prompt.txt, Ctrl+A, Ctrl+C, paste into the agent's prompt / instructions field.
+2. SYSTEM PROMPT
+   Agent Config > your agent > Persona > Identity > "System Prompt".
+   Open 1-system-prompt.txt, Ctrl+A, Ctrl+C, paste.
 
-3. KNOWLEDGE  ->  upload the ${knowledge.length} files in the folder 2-knowledge-files. Upload nothing else.
-   Never upload a pricing guide, transcripts, or any internal document.
+3. KNOWLEDGE BASE
+   Left menu: Knowledge Base > create one named "Aangan Studio" > upload the ${knowledge.length} files in 2-knowledge-files.
+   Then attach that knowledge base to the agent. Upload nothing else: never a pricing guide, transcripts or internal notes.
 
-4. CAL.COM BOOKING  ->  in Vaani's integrations, connect Cal.com.
-   Vaani will ask for a Cal.com API key. Create one in Cal.com: Settings, Developer, API keys. Paste it into Vaani yourself.
-   Give the agent two actions: check availability (next 14 days) and create booking.
-   Booking needs: caller name, phone, email (optional), location (site visit or studio), and the chosen slot.
-   Event to use: "Consultation".
+4. CAL.COM BOOKING
+   Left menu: Integrations > Cal.com. Vaani asks for a Cal.com API key. Create it in Cal.com
+   (Settings > Developer > API keys) and paste it into Vaani yourself. Then choose the event type "Consultation".
 
-5. COMPLAINT TRANSFER  ->  add a "transfer call" action to Nikhil's phone number.
-   If the transfer fails, the agent promises a callback from a senior person within 15 minutes (already in the prompt).
+5. COMPLAINT TRANSFER
+   Left menu: Tools & Actions. Look for a human transfer / call transfer action and set it to Nikhil's number.
+   If Vaani does not offer one, tell Claude. The prompt already promises a callback within 15 minutes if a transfer fails.
 
-6. POST-CALL ANALYSIS  ->  open 3-post-call-fields.txt and add each field exactly as named.
+6. ENTITY EXTRACTION
+   Agent Config > your agent > Analysis tab > Entity extraction.
+   Open 3-entity-extraction-fields.txt and add each field with the exact name and instruction.
 
-7. WEBHOOK  ->  open 4-webhook-SECRET.txt and fill in the end-of-call webhook.
+7. WEBHOOK
+   Settings > Webhooks. Open 4-webhook-SECRET.txt and add the address in it.
 
-8. PHONE NUMBER  ->  attach the studio's number to the agent (or forward the existing studio number to Vaani's number).
+8. PHONE NUMBER
+   Agent Config > your agent > Deployment tab > "Inbound Number". Choose the studio number. Save Changes.
 
-9. RECORDING  ->  turn on call recording and transcripts. If Vaani requires a recording notice, enable it.
+9. VAANI API KEY (so the app can read the caller's number and the cost)
+   Create an API key in Vaani (docs: Getting Started > Generate an API Key). Add it in Vercel as VAANI_API_KEY.
+   Ask Vaani support what one credit costs in rupees, then add VAANI_CREDIT_TO_INR in Vercel (default 1).
 
-10. TEST  ->  call the number and say you want a consultation. Then tell Claude "test call done" and the app will be checked.
-    The full list of 20 scenarios and pricing-pressure calls is in tests/agent-test-log.md.
+10. TEST
+   Call the number and ask for a consultation. Then tell Claude "test call done".
+   The 20 scenarios and the pricing-pressure calls are in tests/agent-test-log.md.
 `,
 );
 

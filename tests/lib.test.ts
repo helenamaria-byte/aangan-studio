@@ -116,6 +116,12 @@ describe("webhook verification", () => {
     expect(verifyVaani(body, new Headers({ "x-vaani-signature": sig("other") }), "s3")).toBe(false);
     expect(verifyVaani(body, new Headers(), "s3")).toBe(false);
   });
+  it("Vaani: accepts the secret as ?token= in the webhook address, and only the right one", () => {
+    expect(verifyVaani(body, new Headers(), "s3", "s3")).toBe(true);
+    expect(verifyVaani(body, new Headers(), "s3", "wrong")).toBe(false);
+    expect(verifyVaani(body, new Headers({ "x-vaani-secret": "s3" }), "s3", "wrong")).toBe(false); // a wrong token is never rescued by a header
+    expect(verifyVaani(body, new Headers(), undefined, "anything")).toBe(false);
+  });
   it("Cal.com: checks the HMAC of the raw body", () => {
     expect(verifyCalcom(body, new Headers({ "x-cal-signature-256": sig("c") }), "c")).toBe(true);
     expect(verifyCalcom('{"a":2}', new Headers({ "x-cal-signature-256": sig("c") }), "c")).toBe(false);

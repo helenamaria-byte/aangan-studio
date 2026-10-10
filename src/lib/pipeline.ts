@@ -11,6 +11,7 @@ import { parseVaaniPayload } from "./sources/vaani";
 import { isAfterHours } from "./time";
 import * as hubspot from "./clients/hubspot";
 import { sendEmail } from "./clients/resend";
+import { applyCallRecord, fetchCallRecord } from "./clients/vaani-api";
 
 type CallRow = typeof calls.$inferSelect;
 
@@ -97,9 +98,11 @@ export async function ingestVaaniCall(db: Db, raw: unknown): Promise<VaaniResult
   const settings = await loadSettings(db);
   const obj = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
 
+  const creditToInr = Number(process.env.VAANI_CREDIT_TO_INR ?? 1) || 1;
+  const problems: string[] = [];
   let enquiry: Enquiry;
   try {
-    enquiry = parseVaaniPayload(raw, { usdToInr: settings.usdToInr });
+    enquiry = parseVaaniPayload(raw, { usdToInr: settings.usdToInr, creditToInr });
     if (process.env.EXTRACTION_MODE === "llm" && typeof obj.transcript === "string") {
       enquiry = await extractWithLlm(obj.transcript, enquiry, settings.usdToInr);
     }
@@ -118,6 +121,23 @@ export async function ingestVaaniCall(db: Db, raw: unknown): Promise<VaaniResult
       .onConflictDoNothing({ target: calls.vaaniCallId })
       .returning({ id: calls.id });
     return row ? { status: "unparsed", callId: row.id } : { status: "duplicate" };
+  }
+
+  // The webhook has no caller number or cost. Ask Vaani's call history for them.
+  const apiKey = process.env.VAANI_API_KEY;
+  if (apiKey) {
+    try {
+      const rec = await withRetry(() => fetchCallRecord(enquiry.sourceId, apiKey), 3, 1500);
+      enquiry = applyCallRecord(enquiry, rec, creditToInr);
+    } catch (err) {
+      problems.push(`Vaani call history: ${errorMessage(err)}`);
+    }
+  }
+  if (!enquiry.callerPhone) {
+    problems.push(
+      "No caller phone number for this call, so it cannot be matched to a booking or a CRM contact" +
+        (apiKey ? "" : ". Set VAANI_API_KEY so the number can be read from Vaani's call history"),
+    );
   }
 
   const c = enquiry.costs;
@@ -148,13 +168,14 @@ export async function ingestVaaniCall(db: Db, raw: unknown): Promise<VaaniResult
     .returning({ id: calls.id });
 
   if (!inserted) return { status: "duplicate" };
-  await processCall(db, inserted.id, enquiry, settings);
+  await processCall(db, inserted.id, enquiry, settings, problems);
   return { status: "created", callId: inserted.id };
 }
 
-async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSettings) {
+async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSettings, earlierProblems: string[] = []) {
   const plan = planActions(e);
   const failures = new Failures();
+  for (const p of earlierProblems) failures.add(p);
   const key = phoneKey(e.callerPhone);
 
   // A dropped call that rings back within 10 minutes no longer needs a callback.

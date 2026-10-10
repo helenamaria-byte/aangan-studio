@@ -7,11 +7,14 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 /**
- * Vaani: accepts either a shared secret sent as a header, or an HMAC-SHA256 hex signature of the raw body.
- * TODO: confirm which one Vaani actually uses (header names below are the common ones) and drop the other.
+ * Vaani: accepts the secret as ?token= in the URL (what Vaani's webhook screen allows), or as a header, or as an
+ * HMAC-SHA256 hex signature of the raw body, in case Vaani adds signing later.
  */
-export function verifyVaani(rawBody: string, headers: Headers, secret: string | undefined): boolean {
+export function verifyVaani(rawBody: string, headers: Headers, secret: string | undefined, urlToken?: string | null): boolean {
   if (!secret) return false; // fail closed: an unset secret must never mean "accept everything"
+  // Vaani's documentation describes no signature and no custom headers for webhooks, so the secret travels in the
+  // webhook address itself: .../api/webhooks/vaani?token=<secret>
+  if (urlToken) return safeEqual(urlToken, secret);
   const shared = headers.get("x-vaani-secret") ?? headers.get("x-webhook-secret");
   if (shared) return safeEqual(shared, secret);
   const sig = headers.get("x-vaani-signature") ?? headers.get("x-signature");

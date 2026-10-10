@@ -12,6 +12,57 @@ const analysis = {
   summary: "Booked.",
 };
 
+describe("Vaani's documented call_postprocessing event (docs.vaanivoice.ai/guides/webhook-setup)", () => {
+  const documented = {
+    event: "call_postprocessing",
+    call_id: "inbound-1791779640-ab12cd34",
+    timestamp: "2026-10-12T04:34:00Z",
+    data: {
+      room_name: "room_123abc",
+      call_id: "inbound-1791779640-ab12cd34",
+      call_duration: 240000, // milliseconds in this event
+      end_reason: "USER_DISCONNECT",
+      summary: "Priya wants a full 3BHK redesign. Booked.",
+      entities: { ...analysis, summary: undefined, caller_phone: "+919800000001" }, // no summary field, so Vaani's own summary is used
+      dispositions: { outcome: "Booked" },
+      recording_url: "https://api.vaanivoice.ai/api/stream/inbound-1791779640-ab12cd34",
+      transcript: "AGENT: Good morning, Aangan Studio.\nUSER: Hi, I want to redo my flat.",
+    },
+  };
+
+  it("reads the call, with the duration in milliseconds and the start worked out from the event time", () => {
+    const e = parseVaaniPayload(documented, opts);
+    expect(e.sourceId).toBe("inbound-1791779640-ab12cd34");
+    expect(e.durationSec).toBe(240);
+    expect(e.endedAt!.toISOString()).toBe("2026-10-12T04:34:00.000Z");
+    expect(e.startedAt.toISOString()).toBe("2026-10-12T04:30:00.000Z");
+    expect(e.callerName).toBe("Priya");
+    expect(e.outcome).toBe("qualified_booked");
+    expect(e.sizeSqft).toBe(1400);
+    expect(e.callerPhone).toBe("+919800000001"); // from the extracted field, until call history supplies caller ID
+    expect(e.summary).toBe("Priya wants a full 3BHK redesign. Booked.");
+    expect(e.recordingUrl).toContain("/api/stream/");
+  });
+
+  it("has no cost in the webhook, so the cost starts at zero (call history fills it in)", () => {
+    expect(parseVaaniPayload(documented, opts).costs).toEqual({ voiceInr: 0, telephonyInr: 0, llmInr: 0 });
+  });
+
+  it("converts Vaani credits to rupees when a cost is present", () => {
+    const e = parseVaaniPayload({ ...documented, call_cost: 2.3 }, { usdToInr: 85, creditToInr: 4 });
+    expect(e.costs.voiceInr).toBeCloseTo(9.2, 2);
+  });
+
+  it("only call_postprocessing is processed. Every other Vaani event is ignored", async () => {
+    const { shouldProcessEvent } = await import("../src/lib/sources/vaani");
+    expect(shouldProcessEvent(documented)).toBe(true);
+    for (const ev of ["call_started", "call_ringing", "user_picked_up_at", "call_ended", "human_transfer_initiated", "human_transfer_successful", "human_transfer_failed", "call_failed", "call_rejected", "call_no_answer"]) {
+      expect(shouldProcessEvent({ event: ev, room_name: "r" }), ev).toBe(false);
+    }
+    expect(shouldProcessEvent({ call_id: "no-event-field" })).toBe(true); // an unknown format is never silently dropped
+  });
+});
+
 describe("Vaani adapter tolerates likely payload shapes (the real one is confirmed on the first test call)", () => {
   it("reads our assumed shape", () => {
     const e = parseVaaniPayload(

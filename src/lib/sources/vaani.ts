@@ -59,21 +59,26 @@ function date(v: unknown): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-// Vaani's real webhook format is not confirmed (its documentation could not be reached when this was written).
-// So every field is looked up under the names a voice platform is likely to use, and the payload may be wrapped
-// in an envelope such as { data: {...} }. The raw payload is always saved, so the first real test call shows the
-// true shape. Anything not matched here shows up in the dashboard as "Could not read this call", never lost.
+// Vaani (app.vaanivoice.ai) sends several webhook events. The one we act on is "call_postprocessing", sent once the
+// transcript and analysis are ready (docs.vaanivoice.ai/guides/webhook-setup):
+//   { event, call_id, timestamp, data: { room_name, call_id, call_duration (milliseconds), end_reason, summary,
+//     entities: { ...the fields we define in the agent's entity extraction }, dispositions, recording_url, transcript } }
+// It does NOT include the caller's number, the start time, or the cost. The number and cost come from Vaani's
+// call-history API (see ../clients/vaani-api.ts); the start time is worked out as timestamp minus duration.
+// Other field names are still accepted too, in case Vaani changes the format, and the raw payload is always saved.
 const KEYS = {
   id: ["call_id", "callId", "id", "call_uuid", "call_sid", "uuid", "conversation_id", "session_id"],
-  start: ["started_at", "start_time", "startedAt", "startTime", "call_start_time", "start_timestamp", "created_at"],
-  end: ["ended_at", "end_time", "endedAt", "endTime", "call_end_time", "end_timestamp"],
+  start: ["started_at", "start_time", "Start_time", "startedAt", "startTime", "call_start_time", "start_timestamp", "created_at"],
+  end: ["ended_at", "end_time", "End_time", "endedAt", "endTime", "call_end_time", "end_timestamp"],
+  eventTime: ["timestamp"],
   duration: ["duration_seconds", "duration_sec", "duration", "call_duration", "call_duration_seconds", "durationSeconds"],
+  durationMs: ["duration_ms"],
   from: ["from_number", "from", "caller_number", "customer_number", "caller", "customer_phone", "phone_number", "caller_id"],
-  recording: ["recording_url", "recordingUrl", "call_recording_url", "recording"],
-  transcriptUrl: ["transcript_url", "transcriptUrl"],
-  analysis: ["analysis", "post_call_analysis", "call_analysis", "extracted_data", "structured_data", "extraction"],
+  recording: ["recording_url", "recordingUrl", "call_recording_url", "recording_api", "recording"],
+  transcriptUrl: ["transcript_url", "transcriptUrl", "call_transcription"],
+  analysis: ["entities", "entity", "call_entity", "analysis", "post_call_analysis", "call_analysis", "extracted_data", "structured_data", "extraction"],
   cost: ["cost", "costs", "billing", "pricing"],
-  totalCost: ["total_cost", "cost_total", "call_cost"],
+  totalCost: ["call_cost", "total_cost", "cost_total"],
   currency: ["currency", "cost_currency"],
 } as const;
 const WRAPPERS = ["data", "call", "payload", "body", "event_data", "message"];
@@ -87,12 +92,19 @@ function get(o: Obj, keys: readonly string[]): unknown {
 /** Top-level fields plus the fields of the first wrapper object that looks like the call record. */
 function unwrap(raw: unknown): Obj {
   const top = asObj(raw);
-  if (get(top, KEYS.id)) return top;
-  for (const w of WRAPPERS) {
-    const inner = asObj(top[w]);
-    if (get(inner, KEYS.id)) return { ...top, ...inner };
+  let p = top;
+  if (!get(top, KEYS.id)) {
+    for (const w of WRAPPERS) {
+      const inner = asObj(top[w]);
+      if (get(inner, KEYS.id)) {
+        p = { ...top, ...inner };
+        break;
+      }
+    }
   }
-  return top;
+  // Vaani puts the call's details under "data" even though the call id is also at the top.
+  const data = asObj(p.data);
+  return Object.keys(data).length ? { ...p, ...data, event: p.event ?? data.event } : p;
 }
 
 /** The post-call analysis as a flat object. Accepts an object, an object with a nested fields object, or a list of {name, value}. */
@@ -118,6 +130,8 @@ function analysisBag(p: Obj): Obj {
 
 export interface AdapterOptions {
   usdToInr: number;
+  /** Rupees per Vaani credit (Vaani reports call cost in credits). */
+  creditToInr?: number;
 }
 
 /** Throws if the payload has no call ID or start time. The caller stores the raw payload before calling this. */
@@ -127,17 +141,30 @@ export function parseVaaniPayload(raw: unknown, opts: AdapterOptions): Enquiry {
 
   const sourceId = str(get(p, KEYS.id));
   if (!sourceId) throw new Error("Vaani payload has no call id (looked for call_id, id, call_uuid and similar)");
-  const startedAt = date(get(p, KEYS.start));
-  if (!startedAt) throw new Error("Vaani payload has no readable start time (looked for started_at, start_time and similar)");
-  const endedAt = date(get(p, KEYS.end));
+  // Duration. Vaani's call_postprocessing event reports call_duration in MILLISECONDS; other events use seconds.
+  const isPostProcessing = str(p.event) === "call_postprocessing";
+  const msRaw = num(get(p, KEYS.durationMs)) ?? (isPostProcessing ? num(p.call_duration) : null);
+  let durationSec: number | null = msRaw !== null ? Math.round(msRaw / 1000) : num(get(p, KEYS.duration));
 
-  let durationSec = num(get(p, KEYS.duration));
+  // Times. With no start time, the event's own timestamp is treated as the end of the call, and the start is
+  // worked out from the duration.
+  let startedAt = date(get(p, KEYS.start));
+  let endedAt = date(get(p, KEYS.end));
+  const eventTime = date(get(p, KEYS.eventTime));
+  if (!startedAt && eventTime && durationSec !== null) {
+    endedAt ??= eventTime;
+    startedAt = new Date(endedAt.getTime() - durationSec * 1000);
+  }
+  if (!startedAt && eventTime) startedAt = eventTime;
+  if (!startedAt) throw new Error("Vaani payload has no readable start time (looked for started_at, start_time, timestamp and similar)");
   if (durationSec === null && endedAt) durationSec = Math.max(0, Math.round((endedAt.getTime() - startedAt.getTime()) / 1000));
 
   // Costs: an object of parts, or one total number.
   const costRaw = get(p, KEYS.cost);
   const cost = asObj(costRaw);
-  const total = num(costRaw) ?? num(get(p, KEYS.totalCost)) ?? num(cost.total ?? cost.total_cost ?? cost.amount);
+  const creditRate = opts.creditToInr ?? 1;
+  const credits = num(p.call_cost); // Vaani reports cost in credits
+  const total = credits !== null ? credits * creditRate : (num(costRaw) ?? num(get(p, KEYS.totalCost)) ?? num(cost.total ?? cost.total_cost ?? cost.amount));
   const voiceRaw = num(cost.voice ?? cost.voice_cost ?? cost.stt_tts ?? cost.agent);
   const telephonyRaw = num(cost.telephony ?? cost.telephony_cost ?? cost.phone ?? cost.carrier);
   const llmRaw = num(cost.llm ?? cost.llm_cost ?? cost.ai);
@@ -169,7 +196,7 @@ export function parseVaaniPayload(raw: unknown, opts: AdapterOptions): Enquiry {
     declineReason: pick(a.decline_reason, DECLINE),
     doubts: str(a.doubts),
     language: str(a.language),
-    summary: str(a.summary),
+    summary: str(a.summary) ?? str(p.summary) ?? str(p.call_summary),
     transcriptUrl: str(get(p, KEYS.transcriptUrl)),
     recordingUrl: str(get(p, KEYS.recording)),
     costs: hasParts
@@ -177,4 +204,14 @@ export function parseVaaniPayload(raw: unknown, opts: AdapterOptions): Enquiry {
       : { voiceInr: money(total), telephonyInr: 0, llmInr: 0 },
     raw,
   };
+}
+
+/**
+ * Vaani sends many events (call_started, call_ringing, call_ended, human_transfer_*, call_postprocessing...).
+ * Only call_postprocessing has the transcript and our extracted fields. A payload with no "event" at all is
+ * processed, so a different or older format is never silently dropped.
+ */
+export function shouldProcessEvent(raw: unknown): boolean {
+  const ev = str(asObj(raw).event);
+  return ev === null || ev === "call_postprocessing";
 }

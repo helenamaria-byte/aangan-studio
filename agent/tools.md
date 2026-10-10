@@ -19,9 +19,10 @@ Claude Code cannot click through the Vaani dashboard. Set these up by hand, then
 - A complaint email is always sent to Nikhil by the webhook, even when the live transfer works.
 
 ## 3. Webhook
-- Event: end of call. Method: POST. URL: `https://<your-vercel-domain>/api/webhooks/vaani`.
-- Add the shared secret in Vaani's webhook settings. It must match `VAANI_WEBHOOK_SECRET`.
-- Include in the payload: call ID, start and end time, caller number, transcript, recording URL, cost fields, and the post-call analysis fields from `post-call-fields.md`.
+- In Vaani: Settings, Webhooks. Add the address `https://<your-vercel-domain>/api/webhooks/vaani?token=<VAANI_WEBHOOK_SECRET>`.
+- Vaani sends an event for each stage of a call. The app acts only on `call_postprocessing` (transcript, summary and extracted fields) and ignores the rest.
+- Vaani does not document signatures or custom headers, so the secret travels in the address. Keep that address private.
+- The webhook carries no caller number or cost. The app reads those from Vaani's call-history API, using `VAANI_API_KEY`.
 
 ## 4. Agent settings
 - Languages: English, Hindi, Marathi, with automatic switching.

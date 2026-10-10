@@ -1,6 +1,6 @@
 # Post-call fields
 
-Configure these as structured fields in Vaani's post-call analysis. The webhook reads them in `src/lib/sources/vaani.ts`. If Vaani's extraction proves unreliable in testing, set `EXTRACTION_MODE=llm` and the webhook extracts the same fields from the transcript instead.
+Configure these as **entity extraction** fields in Vaani (Agent Config, Analysis tab). They arrive in the webhook as `data.entities`. The webhook reads them in `src/lib/sources/vaani.ts`. If Vaani's extraction proves unreliable in testing, set `EXTRACTION_MODE=llm` and the webhook extracts the same fields from the transcript instead.
 
 | Field | Type | Allowed values / notes |
 |---|---|---|
