@@ -1,4 +1,5 @@
-// Draws the components map: docs/components-map.svg, and docs/components-map.png if a PNG renderer is available.
+// Draws the components map as a swimlane grid: docs/components-map.svg, and docs/components-map.png if a PNG
+// renderer is available. Columns: Actor, Trigger, Input, Context, Processing, AI, Output. One row per actor.
 // Run: node scripts/make-components-map.mjs [path-to-@resvg/resvg-js]
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -6,102 +7,119 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const W = 1800;
-const H = 1230;
-
-const INK = "#2B2522";
-const MUTED = "#7A716B";
-const SAGE = "#4F6B5A";
-const LINE = "#D8D2CB";
-const BG = "#FAFAF7";
 const FONT = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+const NAVY = "#14284B";
+
+const COLS = ["Trigger", "Input", "Context", "Processing", "AI", "Output"];
+const ACTOR_W = 190;
+const COL_W = 255;
+const X0 = 30;
+const TITLE_H = 80;
+const HEAD_H = 60;
+const ROW_H = 122;
+const BOX_W = 227;
+const BOX_H = 98;
+
+// Rows: label, sublabel, background tint, box fill, box border
+const ROWS = [
+  ["Caller", "(User)", "#E8F0FE", "#DCE9FF", "#4A86E8"],
+  ["Voice Agent", "(Vaani.ai)", "#F0EAFB", "#E6DBFA", "#7B52D6"],
+  ["Calendar", "(Cal.com)", "#E4F6F3", "#CFEFE9", "#1FA58E"],
+  ["System", "(App on Vercel)", "#FFF8DF", "#FFF0C2", "#E0A100"],
+  ["Data and CRM", "(Neon, HubSpot)", "#E8F6EA", "#D3EFD8", "#2E9E4F"],
+  ["Email Service", "(Resend)", "#FDEBF1", "#FADBE7", "#D6457F"],
+  ["Staff", "(Designer, Nikhil, Front desk)", "#FFF0E5", "#FFE0CC", "#E8630A"],
+];
+
+const W = X0 * 2 + ACTOR_W + COLS.length * COL_W;
+const H = TITLE_H + HEAD_H + ROWS.length * ROW_H + 70;
+
+const colX = (c) => X0 + ACTOR_W + c * COL_W;
+const rowY = (r) => TITLE_H + HEAD_H + r * ROW_H;
+const bx = (c) => colX(c) + (COL_W - BOX_W) / 2;
+const by = (r) => rowY(r) + (ROW_H - BOX_H) / 2;
+const cy = (r) => by(r) + BOX_H / 2;
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const out = [];
 
-function box(x, y, w, h, title, lines = [], o = {}) {
-  const fill = o.fill ?? "#FFFFFF";
-  const stroke = o.stroke ?? LINE;
-  out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="${fill}" stroke="${stroke}" stroke-width="${o.sw ?? 1.5}"/>`);
-  out.push(`<text x="${x + 20}" y="${y + 34}" font-size="21" font-weight="600" fill="${INK}">${esc(title)}</text>`);
-  lines.forEach((l, i) => out.push(`<text x="${x + 20}" y="${y + 62 + i * 23}" font-size="15.5" fill="${MUTED}">${esc(l)}</text>`));
-}
-
-function arrow(d, o = {}) {
-  out.push(`<path d="${d}" fill="none" stroke="${SAGE}" stroke-width="2.4" ${o.start ? 'marker-start="url(#a)"' : ""} marker-end="url(#a)"/>`);
-}
-
-function badge(x, y, n) {
-  out.push(`<circle cx="${x}" cy="${y}" r="15" fill="${SAGE}"/>`);
-  out.push(`<text x="${x}" y="${y + 5.5}" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">${n}</text>`);
-}
-
 out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT}">`);
-out.push(`<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${SAGE}"/></marker></defs>`);
-out.push(`<rect width="${W}" height="${H}" fill="${BG}"/>`);
+out.push(`<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${NAVY}"/></marker></defs>`);
+out.push(`<rect width="${W}" height="${H}" fill="#FFFFFF"/>`);
+out.push(`<text x="${W / 2}" y="52" font-size="34" font-weight="700" fill="${NAVY}" text-anchor="middle">Aangan Studio · AI Phone Enquiry System — Components Map</text>`);
 
-// Title
-out.push(`<text x="60" y="72" font-size="36" font-weight="600" fill="${INK}">Aangan Studio: AI phone enquiry system</text>`);
-out.push(`<text x="60" y="108" font-size="19" fill="${MUTED}">Components map. Every call is answered, qualified, booked, handed to a designer, and logged. Numbers follow one call from start to finish.</text>`);
+// Header row
+out.push(`<rect x="${X0}" y="${TITLE_H}" width="${W - 2 * X0}" height="${HEAD_H}" rx="10" fill="${NAVY}"/>`);
+out.push(`<text x="${X0 + ACTOR_W / 2}" y="${TITLE_H + 38}" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Actor</text>`);
+COLS.forEach((c, i) => out.push(`<text x="${colX(i) + COL_W / 2}" y="${TITLE_H + 38}" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">${c}</text>`));
 
-// Left column
-box(60, 300, 220, 110, "Caller", ["Phones the studio", "number, any hour"]);
-box(360, 240, 300, 230, "Vaani.ai voice agent", ["Answers every call, 24/7", "English, Hindi, Marathi", "Five qualifying checks", "Never states a price", "Books on the call", "Transfers complaints"]);
-box(360, 620, 300, 150, "Cal.com", ["Consultation booking", "Round-robin picks the", "designer (team plan)"]);
-box(360, 860, 300, 130, "GitHub", ["Code, agent prompt and", "knowledge files, tests"]);
-
-// Vercel container
-out.push(`<rect x="780" y="180" width="560" height="700" rx="18" fill="#F1F5F2" stroke="${SAGE}" stroke-width="2"/>`);
-out.push(`<text x="806" y="216" font-size="23" font-weight="600" fill="${SAGE}">Vercel: Next.js app (Singapore)</text>`);
-box(810, 245, 500, 95, "POST /api/webhooks/vaani", ["Checks the secret, ignores all but the final event,", "saves each call once (repeat deliveries are harmless)"]);
-box(810, 360, 500, 80, "POST /api/webhooks/calcom", ["Checks the signature, records bookings and cancellations"]);
-box(810, 460, 500, 165, "Call pipeline: routes by outcome", ["Booked: HubSpot deal, then designer email", "Lead without booking: front-desk email", "Complaint: urgent email to Nikhil, first", "Declined: HubSpot contact only. Dropped: callback", "Every failure retried 3 times, then flagged"]);
-box(810, 645, 500, 105, "Dashboard (email sign-in link)", ["Home, Calls, Reports, Settings", "Owner and front-desk roles"]);
-box(810, 765, 500, 90, "Weekly summary: Monday 9am IST", ["Vercel cron emails the owner the week's numbers"]);
-
-// Right column
-box(1480, 210, 280, 170, "Neon Postgres", ["calls, bookings,", "designers, settings", "Raw payloads, outcomes,", "costs"]);
-box(1480, 420, 280, 140, "HubSpot CRM", ["Contact, deal, notes", "One contact per phone", "number"]);
-box(1480, 600, 280, 140, "Resend", ["Handoff note, alerts,", "weekly summary,", "sign-in links"]);
-box(1480, 800, 280, 190, "People", ["Designer: complete handoff", "note within minutes", "Nikhil: urgent alerts,", "dashboard, summary", "Front desk: leads to call back"], { fill: "#FFFFFF" });
-
-// Arrows and numbered badges
-arrow("M280,355 H360");               badge(320, 355, 1);
-arrow("M510,470 V620", { start: true }); badge(510, 545, 2);
-arrow("M660,695 H730 V400 H810");     badge(730, 560, 3);
-arrow("M660,285 H810");               badge(735, 285, 4);
-arrow("M810,335 H660");               badge(735, 335, 5);
-arrow("M1340,295 H1480");             badge(1410, 295, 6);
-arrow("M1340,490 H1480");             badge(1410, 490, 7);
-arrow("M1340,670 H1480");             badge(1410, 670, 8);
-arrow("M1620,740 V800");
-arrow("M1480,880 H1405 V700 H1310");  badge(1405, 800, 9);
-arrow("M660,925 H1060 V880");         badge(900, 925, 10);
-
-// Steps
-out.push(`<line x1="60" y1="1030" x2="${W - 60}" y2="1030" stroke="${LINE}" stroke-width="1.5"/>`);
-out.push(`<text x="60" y="1068" font-size="21" font-weight="600" fill="${INK}">How one call flows</text>`);
-const steps = [
-  "The caller dials the studio number. Vaani answers at any hour.",
-  "Vaani qualifies the caller and books the consultation in Cal.com during the call.",
-  "Cal.com sends the booking to the app as a signed message.",
-  "When the call ends, Vaani sends the transcript and extracted fields.",
-  "The app reads the caller's number and the cost from Vaani's call history.",
-  "The app saves the raw payload, the outcome and the cost in Neon.",
-  "The app creates the HubSpot contact, deal and note, with no duplicates.",
-  "Resend emails the designer, Nikhil or the front desk, whichever applies.",
-  "The owner and front desk sign in and read everything on the dashboard.",
-  "Every push to GitHub runs the tests and price check, then deploys to Vercel.",
-];
-steps.forEach((t, i) => {
-  const col = i < 5 ? 0 : 1;
-  const row = i % 5;
-  const x = 60 + col * 870;
-  const y = 1102 + row * 27;
-  badge(x + 12, y - 5, i + 1);
-  out.push(`<text x="${x + 38}" y="${y}" font-size="16" fill="${INK}">${esc(t)}</text>`);
+// Rows
+ROWS.forEach(([label, sub, tint], r) => {
+  out.push(`<rect x="${X0 + ACTOR_W}" y="${rowY(r)}" width="${W - 2 * X0 - ACTOR_W}" height="${ROW_H}" fill="${tint}"/>`);
+  out.push(`<rect x="${X0}" y="${rowY(r)}" width="${ACTOR_W}" height="${ROW_H}" fill="${NAVY}"/>`);
+  out.push(`<line x1="${X0}" y1="${rowY(r)}" x2="${W - X0}" y2="${rowY(r)}" stroke="#FFFFFF" stroke-width="2"/>`);
+  out.push(`<text x="${X0 + ACTOR_W / 2}" y="${rowY(r) + ROW_H / 2 - 4}" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">${esc(label)}</text>`);
+  // sub-label may need two lines
+  const words = sub.replace(/[()]/g, "").split(", ");
+  const subLines = sub.length > 18 ? [`(${words.slice(0, 2).join(", ")},`, `${words[2]})`] : [sub];
+  subLines.forEach((l, i) => out.push(`<text x="${X0 + ACTOR_W / 2}" y="${rowY(r) + ROW_H / 2 + 20 + i * 18}" font-size="14.5" fill="#D6DEEC" text-anchor="middle">${esc(l)}</text>`));
 });
+// vertical column guides
+COLS.forEach((_, i) => out.push(`<line x1="${colX(i)}" y1="${TITLE_H + HEAD_H}" x2="${colX(i)}" y2="${TITLE_H + HEAD_H + ROWS.length * ROW_H}" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>`));
 
+// Boxes: [row, col, lines[]]
+const BOXES = {
+  B1: [0, 0, ["Caller phones the studio", "number, any hour"]],
+  B2: [0, 1, ["Caller's spoken details:", "name, area, size, scope,", "timeline"]],
+  B3: [1, 2, ["Prompt and knowledge files", "from GitHub (services, area,", "process). No prices."]],
+  B4: [1, 4, ["Qualifies with 5 checks.", "English, Hindi, Marathi.", "Never states a price."]],
+  B5: [2, 3, ["Books the consultation.", "Round-robin picks the", "designer."]],
+  B6: [3, 0, ["Vaani end-of-call event", "arrives (secret in the", "web address)"]],
+  B7: [3, 1, ["Transcript and extracted", "fields: name, area,", "outcome..."]],
+  B8: [3, 2, ["Caller's number and cost", "from Vaani; booking", "matched by phone"]],
+  B9: [3, 3, ["Routes by outcome.", "Retries 3 times, flags", "any failure."]],
+  B11: [3, 5, ["Dashboard (sign-in): Home,", "Calls, Reports, Settings.", "Weekly summary email."]],
+  B12: [4, 3, ["Neon saves the raw", "payload, outcome", "and cost."]],
+  B13: [4, 5, ["HubSpot: contact, deal", "and note. No duplicate", "contacts."]],
+  B14: [5, 5, ["Resend sends handoff", "note, alerts, summary,", "sign-in links."]],
+  B15: [6, 5, ["Designer: handoff note.", "Nikhil: urgent alerts.", "Front desk: leads."]],
+};
+const FINAL = new Set(["B11", "B15"]);
+
+// Arrows first (so boxes sit on top)
+const dash = (d) => out.push(`<path d="${d}" fill="none" stroke="${NAVY}" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>`);
+const right = (id) => bx(BOXES[id][1]) + BOX_W;
+const left = (id) => bx(BOXES[id][1]);
+const top = (id) => by(BOXES[id][0]);
+const bottom = (id) => by(BOXES[id][0]) + BOX_H;
+const midX = (id) => bx(BOXES[id][1]) + BOX_W / 2;
+const midY = (id) => cy(BOXES[id][0]);
+const gutterAfter = (id) => colX(BOXES[id][1] + 1);
+
+dash(`M${right("B1")},${midY("B1")} H${left("B2")}`);
+dash(`M${right("B2")},${midY("B2")} H${gutterAfter("B2")} V${midY("B3")} H${left("B3")}`);
+dash(`M${right("B3")},${midY("B3")} H${left("B4")}`);
+dash(`M${midX("B4")},${bottom("B4")} V${rowY(2)} H${midX("B5")} V${top("B5")}`);
+dash(`M${midX("B5")},${bottom("B5")} V${rowY(3)} H${midX("B6")} V${top("B6")}`);
+dash(`M${right("B6")},${midY("B6")} H${left("B7")}`);
+dash(`M${right("B7")},${midY("B7")} H${left("B8")}`);
+dash(`M${right("B8")},${midY("B8")} H${left("B9")}`);
+dash(`M${right("B9")},${midY("B9")} H${left("B11")}`);
+dash(`M${midX("B9")},${bottom("B9")} V${top("B12")}`);
+dash(`M${right("B12")},${midY("B12")} H${left("B13")}`);
+dash(`M${midX("B13")},${bottom("B13")} V${top("B14")}`);
+dash(`M${midX("B14")},${bottom("B14")} V${top("B15")}`);
+
+for (const [id, [r, c, lines]] of Object.entries(BOXES)) {
+  const [, , , fill, stroke] = ROWS[r];
+  const f = FINAL.has(id) ? "#FFFFFF" : fill;
+  const s = FINAL.has(id) ? "#E5483A" : stroke;
+  out.push(`<rect x="${bx(c)}" y="${by(r)}" width="${BOX_W}" height="${BOX_H}" rx="12" fill="${f}" stroke="${s}" stroke-width="2.6"/>`);
+  const startY = by(r) + BOX_H / 2 - ((lines.length - 1) * 19) / 2 + 5;
+  lines.forEach((l, i) => out.push(`<text x="${bx(c) + BOX_W / 2}" y="${startY + i * 19}" font-size="15.5" fill="${NAVY}" text-anchor="middle">${esc(l)}</text>`));
+}
+
+out.push(`<text x="${X0}" y="${H - 28}" font-size="16" fill="#5B6578">Dashed arrows follow one call from the phone ring to the people who act on it. Red boxes are what the studio sees.</text>`);
 out.push(`</svg>`);
 const svg = out.join("\n");
 
@@ -112,7 +130,7 @@ console.log("wrote docs/components-map.svg");
 const resvgPath = process.argv[2];
 if (resvgPath) {
   const { Resvg } = createRequire(import.meta.url)(resvgPath);
-  const png = new Resvg(svg, { fitTo: { mode: "width", value: W * 1.5 }, font: { loadSystemFonts: true, defaultFontFamily: "Segoe UI" } }).render().asPng();
+  const png = new Resvg(svg, { fitTo: { mode: "width", value: Math.round(W * 1.5) }, font: { loadSystemFonts: true, defaultFontFamily: "Segoe UI" } }).render().asPng();
   writeFileSync(join(ROOT, "docs", "components-map.png"), png);
   console.log(`wrote docs/components-map.png (${Math.round(png.length / 1024)} KB)`);
 }

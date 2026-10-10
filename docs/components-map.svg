@@ -1,136 +1,124 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1230" viewBox="0 0 1800 1230" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
-<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4F6B5A"/></marker></defs>
-<rect width="1800" height="1230" fill="#FAFAF7"/>
-<text x="60" y="72" font-size="36" font-weight="600" fill="#2B2522">Aangan Studio: AI phone enquiry system</text>
-<text x="60" y="108" font-size="19" fill="#7A716B">Components map. Every call is answered, qualified, booked, handed to a designer, and logged. Numbers follow one call from start to finish.</text>
-<rect x="60" y="300" width="220" height="110" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="80" y="334" font-size="21" font-weight="600" fill="#2B2522">Caller</text>
-<text x="80" y="362" font-size="15.5" fill="#7A716B">Phones the studio</text>
-<text x="80" y="385" font-size="15.5" fill="#7A716B">number, any hour</text>
-<rect x="360" y="240" width="300" height="230" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="380" y="274" font-size="21" font-weight="600" fill="#2B2522">Vaani.ai voice agent</text>
-<text x="380" y="302" font-size="15.5" fill="#7A716B">Answers every call, 24/7</text>
-<text x="380" y="325" font-size="15.5" fill="#7A716B">English, Hindi, Marathi</text>
-<text x="380" y="348" font-size="15.5" fill="#7A716B">Five qualifying checks</text>
-<text x="380" y="371" font-size="15.5" fill="#7A716B">Never states a price</text>
-<text x="380" y="394" font-size="15.5" fill="#7A716B">Books on the call</text>
-<text x="380" y="417" font-size="15.5" fill="#7A716B">Transfers complaints</text>
-<rect x="360" y="620" width="300" height="150" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="380" y="654" font-size="21" font-weight="600" fill="#2B2522">Cal.com</text>
-<text x="380" y="682" font-size="15.5" fill="#7A716B">Consultation booking</text>
-<text x="380" y="705" font-size="15.5" fill="#7A716B">Round-robin picks the</text>
-<text x="380" y="728" font-size="15.5" fill="#7A716B">designer (team plan)</text>
-<rect x="360" y="860" width="300" height="130" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="380" y="894" font-size="21" font-weight="600" fill="#2B2522">GitHub</text>
-<text x="380" y="922" font-size="15.5" fill="#7A716B">Code, agent prompt and</text>
-<text x="380" y="945" font-size="15.5" fill="#7A716B">knowledge files, tests</text>
-<rect x="780" y="180" width="560" height="700" rx="18" fill="#F1F5F2" stroke="#4F6B5A" stroke-width="2"/>
-<text x="806" y="216" font-size="23" font-weight="600" fill="#4F6B5A">Vercel: Next.js app (Singapore)</text>
-<rect x="810" y="245" width="500" height="95" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="830" y="279" font-size="21" font-weight="600" fill="#2B2522">POST /api/webhooks/vaani</text>
-<text x="830" y="307" font-size="15.5" fill="#7A716B">Checks the secret, ignores all but the final event,</text>
-<text x="830" y="330" font-size="15.5" fill="#7A716B">saves each call once (repeat deliveries are harmless)</text>
-<rect x="810" y="360" width="500" height="80" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="830" y="394" font-size="21" font-weight="600" fill="#2B2522">POST /api/webhooks/calcom</text>
-<text x="830" y="422" font-size="15.5" fill="#7A716B">Checks the signature, records bookings and cancellations</text>
-<rect x="810" y="460" width="500" height="165" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="830" y="494" font-size="21" font-weight="600" fill="#2B2522">Call pipeline: routes by outcome</text>
-<text x="830" y="522" font-size="15.5" fill="#7A716B">Booked: HubSpot deal, then designer email</text>
-<text x="830" y="545" font-size="15.5" fill="#7A716B">Lead without booking: front-desk email</text>
-<text x="830" y="568" font-size="15.5" fill="#7A716B">Complaint: urgent email to Nikhil, first</text>
-<text x="830" y="591" font-size="15.5" fill="#7A716B">Declined: HubSpot contact only. Dropped: callback</text>
-<text x="830" y="614" font-size="15.5" fill="#7A716B">Every failure retried 3 times, then flagged</text>
-<rect x="810" y="645" width="500" height="105" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="830" y="679" font-size="21" font-weight="600" fill="#2B2522">Dashboard (email sign-in link)</text>
-<text x="830" y="707" font-size="15.5" fill="#7A716B">Home, Calls, Reports, Settings</text>
-<text x="830" y="730" font-size="15.5" fill="#7A716B">Owner and front-desk roles</text>
-<rect x="810" y="765" width="500" height="90" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="830" y="799" font-size="21" font-weight="600" fill="#2B2522">Weekly summary: Monday 9am IST</text>
-<text x="830" y="827" font-size="15.5" fill="#7A716B">Vercel cron emails the owner the week's numbers</text>
-<rect x="1480" y="210" width="280" height="170" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="1500" y="244" font-size="21" font-weight="600" fill="#2B2522">Neon Postgres</text>
-<text x="1500" y="272" font-size="15.5" fill="#7A716B">calls, bookings,</text>
-<text x="1500" y="295" font-size="15.5" fill="#7A716B">designers, settings</text>
-<text x="1500" y="318" font-size="15.5" fill="#7A716B">Raw payloads, outcomes,</text>
-<text x="1500" y="341" font-size="15.5" fill="#7A716B">costs</text>
-<rect x="1480" y="420" width="280" height="140" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="1500" y="454" font-size="21" font-weight="600" fill="#2B2522">HubSpot CRM</text>
-<text x="1500" y="482" font-size="15.5" fill="#7A716B">Contact, deal, notes</text>
-<text x="1500" y="505" font-size="15.5" fill="#7A716B">One contact per phone</text>
-<text x="1500" y="528" font-size="15.5" fill="#7A716B">number</text>
-<rect x="1480" y="600" width="280" height="140" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="1500" y="634" font-size="21" font-weight="600" fill="#2B2522">Resend</text>
-<text x="1500" y="662" font-size="15.5" fill="#7A716B">Handoff note, alerts,</text>
-<text x="1500" y="685" font-size="15.5" fill="#7A716B">weekly summary,</text>
-<text x="1500" y="708" font-size="15.5" fill="#7A716B">sign-in links</text>
-<rect x="1480" y="800" width="280" height="190" rx="14" fill="#FFFFFF" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="1500" y="834" font-size="21" font-weight="600" fill="#2B2522">People</text>
-<text x="1500" y="862" font-size="15.5" fill="#7A716B">Designer: complete handoff</text>
-<text x="1500" y="885" font-size="15.5" fill="#7A716B">note within minutes</text>
-<text x="1500" y="908" font-size="15.5" fill="#7A716B">Nikhil: urgent alerts,</text>
-<text x="1500" y="931" font-size="15.5" fill="#7A716B">dashboard, summary</text>
-<text x="1500" y="954" font-size="15.5" fill="#7A716B">Front desk: leads to call back</text>
-<path d="M280,355 H360" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="320" cy="355" r="15" fill="#4F6B5A"/>
-<text x="320" y="360.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
-<path d="M510,470 V620" fill="none" stroke="#4F6B5A" stroke-width="2.4" marker-start="url(#a)" marker-end="url(#a)"/>
-<circle cx="510" cy="545" r="15" fill="#4F6B5A"/>
-<text x="510" y="550.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
-<path d="M660,695 H730 V400 H810" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="730" cy="560" r="15" fill="#4F6B5A"/>
-<text x="730" y="565.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
-<path d="M660,285 H810" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="735" cy="285" r="15" fill="#4F6B5A"/>
-<text x="735" y="290.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
-<path d="M810,335 H660" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="735" cy="335" r="15" fill="#4F6B5A"/>
-<text x="735" y="340.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
-<path d="M1340,295 H1480" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="1410" cy="295" r="15" fill="#4F6B5A"/>
-<text x="1410" y="300.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
-<path d="M1340,490 H1480" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="1410" cy="490" r="15" fill="#4F6B5A"/>
-<text x="1410" y="495.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">7</text>
-<path d="M1340,670 H1480" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="1410" cy="670" r="15" fill="#4F6B5A"/>
-<text x="1410" y="675.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">8</text>
-<path d="M1620,740 V800" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<path d="M1480,880 H1405 V700 H1310" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="1405" cy="800" r="15" fill="#4F6B5A"/>
-<text x="1405" y="805.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">9</text>
-<path d="M660,925 H1060 V880" fill="none" stroke="#4F6B5A" stroke-width="2.4"  marker-end="url(#a)"/>
-<circle cx="900" cy="925" r="15" fill="#4F6B5A"/>
-<text x="900" y="930.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">10</text>
-<line x1="60" y1="1030" x2="1740" y2="1030" stroke="#D8D2CB" stroke-width="1.5"/>
-<text x="60" y="1068" font-size="21" font-weight="600" fill="#2B2522">How one call flows</text>
-<circle cx="72" cy="1097" r="15" fill="#4F6B5A"/>
-<text x="72" y="1102.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
-<text x="98" y="1102" font-size="16" fill="#2B2522">The caller dials the studio number. Vaani answers at any hour.</text>
-<circle cx="72" cy="1124" r="15" fill="#4F6B5A"/>
-<text x="72" y="1129.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
-<text x="98" y="1129" font-size="16" fill="#2B2522">Vaani qualifies the caller and books the consultation in Cal.com during the call.</text>
-<circle cx="72" cy="1151" r="15" fill="#4F6B5A"/>
-<text x="72" y="1156.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
-<text x="98" y="1156" font-size="16" fill="#2B2522">Cal.com sends the booking to the app as a signed message.</text>
-<circle cx="72" cy="1178" r="15" fill="#4F6B5A"/>
-<text x="72" y="1183.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
-<text x="98" y="1183" font-size="16" fill="#2B2522">When the call ends, Vaani sends the transcript and extracted fields.</text>
-<circle cx="72" cy="1205" r="15" fill="#4F6B5A"/>
-<text x="72" y="1210.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
-<text x="98" y="1210" font-size="16" fill="#2B2522">The app reads the caller's number and the cost from Vaani's call history.</text>
-<circle cx="942" cy="1097" r="15" fill="#4F6B5A"/>
-<text x="942" y="1102.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
-<text x="968" y="1102" font-size="16" fill="#2B2522">The app saves the raw payload, the outcome and the cost in Neon.</text>
-<circle cx="942" cy="1124" r="15" fill="#4F6B5A"/>
-<text x="942" y="1129.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">7</text>
-<text x="968" y="1129" font-size="16" fill="#2B2522">The app creates the HubSpot contact, deal and note, with no duplicates.</text>
-<circle cx="942" cy="1151" r="15" fill="#4F6B5A"/>
-<text x="942" y="1156.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">8</text>
-<text x="968" y="1156" font-size="16" fill="#2B2522">Resend emails the designer, Nikhil or the front desk, whichever applies.</text>
-<circle cx="942" cy="1178" r="15" fill="#4F6B5A"/>
-<text x="942" y="1183.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">9</text>
-<text x="968" y="1183" font-size="16" fill="#2B2522">The owner and front desk sign in and read everything on the dashboard.</text>
-<circle cx="942" cy="1205" r="15" fill="#4F6B5A"/>
-<text x="942" y="1210.5" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">10</text>
-<text x="968" y="1210" font-size="16" fill="#2B2522">Every push to GitHub runs the tests and price check, then deploys to Vercel.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="1064" viewBox="0 0 1780 1064" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#14284B"/></marker></defs>
+<rect width="1780" height="1064" fill="#FFFFFF"/>
+<text x="890" y="52" font-size="34" font-weight="700" fill="#14284B" text-anchor="middle">Aangan Studio · AI Phone Enquiry System — Components Map</text>
+<rect x="30" y="80" width="1720" height="60" rx="10" fill="#14284B"/>
+<text x="125" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Actor</text>
+<text x="347.5" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Trigger</text>
+<text x="602.5" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Input</text>
+<text x="857.5" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Context</text>
+<text x="1112.5" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Processing</text>
+<text x="1367.5" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">AI</text>
+<text x="1622.5" y="118" font-size="21" font-weight="600" fill="#FFFFFF" text-anchor="middle">Output</text>
+<rect x="220" y="140" width="1530" height="122" fill="#E8F0FE"/>
+<rect x="30" y="140" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="140" x2="1750" y2="140" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="197" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">Caller</text>
+<text x="125" y="221" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(User)</text>
+<rect x="220" y="262" width="1530" height="122" fill="#F0EAFB"/>
+<rect x="30" y="262" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="262" x2="1750" y2="262" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="319" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">Voice Agent</text>
+<text x="125" y="343" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(Vaani.ai)</text>
+<rect x="220" y="384" width="1530" height="122" fill="#E4F6F3"/>
+<rect x="30" y="384" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="384" x2="1750" y2="384" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="441" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">Calendar</text>
+<text x="125" y="465" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(Cal.com)</text>
+<rect x="220" y="506" width="1530" height="122" fill="#FFF8DF"/>
+<rect x="30" y="506" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="506" x2="1750" y2="506" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="563" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">System</text>
+<text x="125" y="587" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(App on Vercel)</text>
+<rect x="220" y="628" width="1530" height="122" fill="#E8F6EA"/>
+<rect x="30" y="628" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="628" x2="1750" y2="628" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="685" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">Data and CRM</text>
+<text x="125" y="709" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(Neon, HubSpot)</text>
+<rect x="220" y="750" width="1530" height="122" fill="#FDEBF1"/>
+<rect x="30" y="750" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="750" x2="1750" y2="750" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="807" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">Email Service</text>
+<text x="125" y="831" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(Resend)</text>
+<rect x="220" y="872" width="1530" height="122" fill="#FFF0E5"/>
+<rect x="30" y="872" width="190" height="122" fill="#14284B"/>
+<line x1="30" y1="872" x2="1750" y2="872" stroke="#FFFFFF" stroke-width="2"/>
+<text x="125" y="929" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="middle">Staff</text>
+<text x="125" y="953" font-size="14.5" fill="#D6DEEC" text-anchor="middle">(Designer, Nikhil,</text>
+<text x="125" y="971" font-size="14.5" fill="#D6DEEC" text-anchor="middle">Front desk)</text>
+<line x1="220" y1="140" x2="220" y2="994" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>
+<line x1="475" y1="140" x2="475" y2="994" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>
+<line x1="730" y1="140" x2="730" y2="994" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>
+<line x1="985" y1="140" x2="985" y2="994" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>
+<line x1="1240" y1="140" x2="1240" y2="994" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>
+<line x1="1495" y1="140" x2="1495" y2="994" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.5"/>
+<path d="M461,201 H489" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M716,201 H730 V323 H744" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M971,323 H1254" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1367.5,372 V384 H1112.5 V396" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1112.5,494 V506 H347.5 V518" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M461,567 H489" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M716,567 H744" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M971,567 H999" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1226,567 H1509" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1112.5,616 V640" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1226,689 H1509" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1622.5,738 V762" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<path d="M1622.5,860 V884" fill="none" stroke="#14284B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+<rect x="234" y="152" width="227" height="98" rx="12" fill="#DCE9FF" stroke="#4A86E8" stroke-width="2.6"/>
+<text x="347.5" y="196.5" font-size="15.5" fill="#14284B" text-anchor="middle">Caller phones the studio</text>
+<text x="347.5" y="215.5" font-size="15.5" fill="#14284B" text-anchor="middle">number, any hour</text>
+<rect x="489" y="152" width="227" height="98" rx="12" fill="#DCE9FF" stroke="#4A86E8" stroke-width="2.6"/>
+<text x="602.5" y="187" font-size="15.5" fill="#14284B" text-anchor="middle">Caller's spoken details:</text>
+<text x="602.5" y="206" font-size="15.5" fill="#14284B" text-anchor="middle">name, area, size, scope,</text>
+<text x="602.5" y="225" font-size="15.5" fill="#14284B" text-anchor="middle">timeline</text>
+<rect x="744" y="274" width="227" height="98" rx="12" fill="#E6DBFA" stroke="#7B52D6" stroke-width="2.6"/>
+<text x="857.5" y="309" font-size="15.5" fill="#14284B" text-anchor="middle">Prompt and knowledge files</text>
+<text x="857.5" y="328" font-size="15.5" fill="#14284B" text-anchor="middle">from GitHub (services, area,</text>
+<text x="857.5" y="347" font-size="15.5" fill="#14284B" text-anchor="middle">process). No prices.</text>
+<rect x="1254" y="274" width="227" height="98" rx="12" fill="#E6DBFA" stroke="#7B52D6" stroke-width="2.6"/>
+<text x="1367.5" y="309" font-size="15.5" fill="#14284B" text-anchor="middle">Qualifies with 5 checks.</text>
+<text x="1367.5" y="328" font-size="15.5" fill="#14284B" text-anchor="middle">English, Hindi, Marathi.</text>
+<text x="1367.5" y="347" font-size="15.5" fill="#14284B" text-anchor="middle">Never states a price.</text>
+<rect x="999" y="396" width="227" height="98" rx="12" fill="#CFEFE9" stroke="#1FA58E" stroke-width="2.6"/>
+<text x="1112.5" y="431" font-size="15.5" fill="#14284B" text-anchor="middle">Books the consultation.</text>
+<text x="1112.5" y="450" font-size="15.5" fill="#14284B" text-anchor="middle">Round-robin picks the</text>
+<text x="1112.5" y="469" font-size="15.5" fill="#14284B" text-anchor="middle">designer.</text>
+<rect x="234" y="518" width="227" height="98" rx="12" fill="#FFF0C2" stroke="#E0A100" stroke-width="2.6"/>
+<text x="347.5" y="553" font-size="15.5" fill="#14284B" text-anchor="middle">Vaani end-of-call event</text>
+<text x="347.5" y="572" font-size="15.5" fill="#14284B" text-anchor="middle">arrives (secret in the</text>
+<text x="347.5" y="591" font-size="15.5" fill="#14284B" text-anchor="middle">web address)</text>
+<rect x="489" y="518" width="227" height="98" rx="12" fill="#FFF0C2" stroke="#E0A100" stroke-width="2.6"/>
+<text x="602.5" y="553" font-size="15.5" fill="#14284B" text-anchor="middle">Transcript and extracted</text>
+<text x="602.5" y="572" font-size="15.5" fill="#14284B" text-anchor="middle">fields: name, area,</text>
+<text x="602.5" y="591" font-size="15.5" fill="#14284B" text-anchor="middle">outcome...</text>
+<rect x="744" y="518" width="227" height="98" rx="12" fill="#FFF0C2" stroke="#E0A100" stroke-width="2.6"/>
+<text x="857.5" y="553" font-size="15.5" fill="#14284B" text-anchor="middle">Caller's number and cost</text>
+<text x="857.5" y="572" font-size="15.5" fill="#14284B" text-anchor="middle">from Vaani; booking</text>
+<text x="857.5" y="591" font-size="15.5" fill="#14284B" text-anchor="middle">matched by phone</text>
+<rect x="999" y="518" width="227" height="98" rx="12" fill="#FFF0C2" stroke="#E0A100" stroke-width="2.6"/>
+<text x="1112.5" y="553" font-size="15.5" fill="#14284B" text-anchor="middle">Routes by outcome.</text>
+<text x="1112.5" y="572" font-size="15.5" fill="#14284B" text-anchor="middle">Retries 3 times, flags</text>
+<text x="1112.5" y="591" font-size="15.5" fill="#14284B" text-anchor="middle">any failure.</text>
+<rect x="1509" y="518" width="227" height="98" rx="12" fill="#FFFFFF" stroke="#E5483A" stroke-width="2.6"/>
+<text x="1622.5" y="553" font-size="15.5" fill="#14284B" text-anchor="middle">Dashboard (sign-in): Home,</text>
+<text x="1622.5" y="572" font-size="15.5" fill="#14284B" text-anchor="middle">Calls, Reports, Settings.</text>
+<text x="1622.5" y="591" font-size="15.5" fill="#14284B" text-anchor="middle">Weekly summary email.</text>
+<rect x="999" y="640" width="227" height="98" rx="12" fill="#D3EFD8" stroke="#2E9E4F" stroke-width="2.6"/>
+<text x="1112.5" y="675" font-size="15.5" fill="#14284B" text-anchor="middle">Neon saves the raw</text>
+<text x="1112.5" y="694" font-size="15.5" fill="#14284B" text-anchor="middle">payload, outcome</text>
+<text x="1112.5" y="713" font-size="15.5" fill="#14284B" text-anchor="middle">and cost.</text>
+<rect x="1509" y="640" width="227" height="98" rx="12" fill="#D3EFD8" stroke="#2E9E4F" stroke-width="2.6"/>
+<text x="1622.5" y="675" font-size="15.5" fill="#14284B" text-anchor="middle">HubSpot: contact, deal</text>
+<text x="1622.5" y="694" font-size="15.5" fill="#14284B" text-anchor="middle">and note. No duplicate</text>
+<text x="1622.5" y="713" font-size="15.5" fill="#14284B" text-anchor="middle">contacts.</text>
+<rect x="1509" y="762" width="227" height="98" rx="12" fill="#FADBE7" stroke="#D6457F" stroke-width="2.6"/>
+<text x="1622.5" y="797" font-size="15.5" fill="#14284B" text-anchor="middle">Resend sends handoff</text>
+<text x="1622.5" y="816" font-size="15.5" fill="#14284B" text-anchor="middle">note, alerts, summary,</text>
+<text x="1622.5" y="835" font-size="15.5" fill="#14284B" text-anchor="middle">sign-in links.</text>
+<rect x="1509" y="884" width="227" height="98" rx="12" fill="#FFFFFF" stroke="#E5483A" stroke-width="2.6"/>
+<text x="1622.5" y="919" font-size="15.5" fill="#14284B" text-anchor="middle">Designer: handoff note.</text>
+<text x="1622.5" y="938" font-size="15.5" fill="#14284B" text-anchor="middle">Nikhil: urgent alerts.</text>
+<text x="1622.5" y="957" font-size="15.5" fill="#14284B" text-anchor="middle">Front desk: leads.</text>
+<text x="30" y="1036" font-size="16" fill="#5B6578">Dashed arrows follow one call from the phone ring to the people who act on it. Red boxes are what the studio sees.</text>
 </svg>
