@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db";
 import { markHandled, retryFailed } from "@/app/actions";
 import { OutcomeBadge, buttonPrimary, buttonQuiet } from "@/components/ui";
-import { requireUser } from "@/lib/auth";
+import { requireViewer } from "@/lib/auth";
 import { dealUrl, contactUrl } from "@/lib/clients/hubspot";
 import { buildComplaintEmail, buildFrontDeskEmail, buildHandoffEmail } from "@/lib/emails";
 import { formatDuration, formatInr } from "@/lib/format";
@@ -12,7 +12,7 @@ import { getCallDetail } from "@/lib/queries";
 import { formatIst } from "@/lib/time";
 
 export default async function CallDetail({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requireUser();
+  const user = await requireViewer();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
 

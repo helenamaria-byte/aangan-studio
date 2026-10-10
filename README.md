@@ -52,7 +52,7 @@ The system never states a price. No number, range or per-square-foot figure. Pri
 
 ## The dashboard
 
-Sign in with an email link (no password). Who may sign in is set on the Settings page, or by `OWNER_EMAIL` and `FRONT_DESK_EMAIL` until then.
+Anyone can LOOK at Home, Calls, a call, and Reports without signing in (read-only). Setting `REQUIRE_LOGIN=true` in Vercel locks everything again. Settings, every button that changes something, and the spreadsheet download need the email sign-in link (no password). Who may sign in is set on the Settings page, or by `OWNER_EMAIL` and `FRONT_DESK_EMAIL` until then.
 
 | Page | Owner | Front desk |
 |---|---|---|

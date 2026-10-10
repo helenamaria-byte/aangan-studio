@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { logout } from "@/app/actions";
-import { requireUser } from "@/lib/auth";
+import { requireViewer } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireUser();
+  const user = await requireViewer();
   const links = [
     { href: "/", label: "Home" },
     { href: "/calls", label: "Calls" },
-    ...(user.role === "owner" ? [{ href: "/reports", label: "Reports" }, { href: "/settings", label: "Settings" }] : []),
+    ...(user.role === "owner" ? [{ href: "/reports", label: "Reports" }] : []),
+    ...(user.role === "owner" && !user.anonymous ? [{ href: "/settings", label: "Settings" }] : []),
   ];
 
   return (
@@ -24,13 +25,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               {l.label}
             </Link>
           ))}
-          <form action={logout}>
-            <button className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm text-muted hover:text-text" title={user.email}>
-              Sign out
-            </button>
-          </form>
+          {user.anonymous ? (
+            <Link href="/login" className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm text-muted hover:text-text">
+              Sign in
+            </Link>
+          ) : (
+            <form action={logout}>
+              <button className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm text-muted hover:text-text" title={user.email}>
+                Sign out
+              </button>
+            </form>
+          )}
         </nav>
       </header>
+      {user.anonymous && (
+        <p role="note" className="mb-4 rounded-lg bg-text/5 px-4 py-3 text-sm text-muted">
+          You are looking without signing in, so this view is read-only. Sign in to change anything.
+        </p>
+      )}
       <main>{children}</main>
     </div>
   );

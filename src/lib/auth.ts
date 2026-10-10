@@ -71,6 +71,26 @@ export async function getSession(): Promise<AppUser | null> {
   return email ? findUser(email) : null;
 }
 
+export type Viewer = AppUser & { anonymous?: boolean };
+
+/**
+ * Open viewing: unless REQUIRE_LOGIN=true, a visitor who is not signed in may LOOK at Home, Calls and Reports
+ * (shown as an owner would see them, read-only). Settings, every button that changes something, and the
+ * spreadsheet download still need a real sign-in. Set REQUIRE_LOGIN=true in Vercel to lock everything.
+ */
+export function viewerFor(session: AppUser | null, requireLogin: boolean): Viewer | null {
+  if (session) return session;
+  if (requireLogin) return null;
+  return { email: "visitor", role: "owner", anonymous: true };
+}
+
+/** For pages that may be viewed without signing in. Never use this in a server action. */
+export async function requireViewer(): Promise<Viewer> {
+  const viewer = viewerFor(await getSession(), process.env.REQUIRE_LOGIN === "true");
+  if (!viewer) redirect("/login");
+  return viewer;
+}
+
 /** Use at the top of every protected page and server action. */
 export async function requireUser(role?: Role): Promise<AppUser> {
   const user = await getSession();
