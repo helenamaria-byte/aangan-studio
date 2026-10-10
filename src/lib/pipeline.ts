@@ -212,6 +212,11 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
     contactId = await failures.run("HubSpot contact", () =>
       hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality, declineReason: h.declineReason }),
     );
+    // Always record the reason as a note too, so it is visible even if the custom property does not exist yet.
+    if (contactId) {
+      const cid = contactId;
+      await failures.run("HubSpot note", () => hubspot.addNote("contacts", cid, `Declined: ${(h.declineReason ?? "other").replace(/_/g, " ")}. ${noteText(e)}`));
+    }
   } else if (h.kind === "note_on_existing") {
     contactId ??= await failures.run("HubSpot lookup", () => hubspot.findContactByPhone(e.callerPhone));
     if (contactId) {

@@ -8,8 +8,8 @@ Work top to bottom. Do not go live until every box in sections 1 to 6 is ticked.
 - [ ] Neon project created. `DATABASE_URL` set in Vercel. Tables created: `npm run db:migrate` against the Neon address
 - [ ] Resend: sending domain verified, `RESEND_API_KEY` and `EMAIL_FROM` set
 - [ ] HubSpot private app created (contacts and deals, read and write). `HUBSPOT_ACCESS_TOKEN`, `HUBSPOT_PORTAL_ID` set
-- [ ] HubSpot contact property `aangan_decline_reason` created
-- [ ] HubSpot deal stages "Consultation booked", "New lead" and a cancelled stage created. Their IDs are in `HUBSPOT_STAGE_BOOKED`, `HUBSPOT_STAGE_NEW`, `HUBSPOT_STAGE_CANCELLED`
+- [ ] (Optional) HubSpot contact property `aangan_decline_reason` created. If it is missing, the reason is still saved as a note on the contact
+- [ ] HubSpot default deal pipeline stages renamed (labels only): "Appointment scheduled" to "New lead", and "Qualified to buy" to "Consultation booked". The app uses these built-in stages by default. Cancelled bookings move to "Closed lost"
 - [ ] Cal.com: round-robin team event "Consultation" across every active designer. Webhook to `/api/webhooks/calcom` with `CALCOM_WEBHOOK_SECRET`
 - [ ] Vaani: agent created, end-of-call webhook to `/api/webhooks/vaani` with `VAANI_WEBHOOK_SECRET`
 - [ ] `AUTH_SECRET` (32+ random characters), `APP_URL` (the real address), `CRON_SECRET`, `OWNER_EMAIL`, `FRONT_DESK_EMAIL`, `STUDIO_PHONE` set

@@ -29,6 +29,7 @@ let sent: Sent[] = [];
 let existingContact: string | null = null; // HubSpot already has this phone number
 let hubspotDown = false;
 let resendDown = false;
+let missingDeclineProperty = false; // the custom HubSpot property has not been created yet
 
 function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = String(input);
@@ -42,6 +43,9 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
   }
   sent.push({ kind: "hubspot", method, url, body });
   if (hubspotDown) return json({ message: "down" }, 500);
+  if (missingDeclineProperty && JSON.stringify(body).includes("aangan_decline_reason")) {
+    return json({ status: "error", message: "Property aangan_decline_reason does not exist", category: "VALIDATION_ERROR" }, 400);
+  }
   if (url.endsWith("/contacts/search")) return json({ results: existingContact ? [{ id: existingContact }] : [] });
   if (url.endsWith("/objects/contacts") && method === "POST") return json({ id: "contact-new" });
   if (url.endsWith("/objects/deals") && method === "POST") return json({ id: "deal-1" });
@@ -88,6 +92,7 @@ beforeEach(async () => {
   existingContact = null;
   hubspotDown = false;
   resendDown = false;
+  missingDeclineProperty = false;
   const db = await getDb();
   await db.delete(bookings);
   await db.delete(calls);
@@ -162,6 +167,32 @@ describe("Vaani webhook pipeline", () => {
     expect((deal.body.properties as Record<string, string>).dealstage).toBe("stage-new");
     const [row] = await db.select().from(calls);
     expect(row.needsAttention).toBe(true);
+  });
+
+  it("declined: the reason is also written as a note, and a missing custom property never loses the lead", async () => {
+    const db = await getDb();
+    missingDeclineProperty = true;
+    await ingestVaaniCall(db, fixture("T03"));
+    const [row] = await db.select().from(calls);
+    expect(row.hubspotContactId).toBe("contact-new"); // saved without the property
+    expect(row.needsAttention).toBe(false);
+    const note = sent.find((s) => s.url.endsWith("/objects/notes"))!;
+    expect((note.body.properties as Record<string, string>).hs_note_body).toMatch(/Declined: out of area/);
+  });
+
+  it("uses HubSpot's default pipeline stages when none are configured", async () => {
+    const db = await getDb();
+    const saved = { b: process.env.HUBSPOT_STAGE_BOOKED, n: process.env.HUBSPOT_STAGE_NEW };
+    delete process.env.HUBSPOT_STAGE_BOOKED;
+    delete process.env.HUBSPOT_STAGE_NEW;
+    try {
+      await ingestVaaniCall(db, fixture("X03-no-booking"));
+      const deal = sent.find((s) => s.url.endsWith("/objects/deals"))!;
+      expect((deal.body.properties as Record<string, string>).dealstage).toBe("appointmentscheduled");
+    } finally {
+      process.env.HUBSPOT_STAGE_BOOKED = saved.b;
+      process.env.HUBSPOT_STAGE_NEW = saved.n;
+    }
   });
 
   it("HubSpot down: tried 3 times, then flagged under needs attention with the error. The call is kept", async () => {

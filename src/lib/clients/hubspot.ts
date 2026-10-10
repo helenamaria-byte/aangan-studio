@@ -35,8 +35,24 @@ function contactProps(c: ContactInput) {
   return props;
 }
 
-/** One contact per phone number: search first, create only if none. */
+const isMissingProperty = (err: unknown) =>
+  err instanceof Error && /aangan_decline_reason|PROPERTY_DOESNT_EXIST/i.test(err.message);
+
+/**
+ * One contact per phone number: search first, create only if none.
+ * If the custom decline-reason property has not been created in HubSpot yet, the contact is saved without it
+ * (the reason is also written as a note by the caller), so a missing property never loses a lead.
+ */
 export async function upsertContact(c: ContactInput): Promise<string> {
+  try {
+    return await upsertContactOnce(c);
+  } catch (err) {
+    if (c.declineReason && isMissingProperty(err)) return upsertContactOnce({ ...c, declineReason: null });
+    throw err;
+  }
+}
+
+async function upsertContactOnce(c: ContactInput): Promise<string> {
   const phone = toE164(c.phone);
   if (phone) {
     const found = await hs<{ results: { id: string }[] }>("/crm/v3/objects/contacts/search", {
@@ -75,15 +91,23 @@ export async function findContactByPhone(rawPhone: string | null): Promise<strin
   return found.results[0]?.id ?? null;
 }
 
+/**
+ * HubSpot's default deal pipeline already has these internal stage IDs. Their labels can be renamed in HubSpot
+ * (Settings > Objects > Deals > Pipelines) without changing the IDs, so no custom stages are needed:
+ *   appointmentscheduled -> rename to "New lead"
+ *   qualifiedtobuy       -> rename to "Consultation booked"
+ *   closedlost           -> used when a booking is cancelled
+ * Set HUBSPOT_STAGE_* to use other stages.
+ */
+const DEFAULT_STAGES = { new: "appointmentscheduled", booked: "qualifiedtobuy", cancelled: "closedlost" } as const;
+
 export function stageId(stage: "booked" | "new" | "cancelled"): string {
-  const map = {
+  const env = {
     booked: process.env.HUBSPOT_STAGE_BOOKED,
     new: process.env.HUBSPOT_STAGE_NEW,
-    cancelled: process.env.HUBSPOT_STAGE_CANCELLED ?? process.env.HUBSPOT_STAGE_NEW,
-  };
-  const id = map[stage];
-  if (!id) throw new Error(`HubSpot stage id for "${stage}" is not set. See .env.example.`);
-  return id;
+    cancelled: process.env.HUBSPOT_STAGE_CANCELLED,
+  }[stage];
+  return env || DEFAULT_STAGES[stage];
 }
 
 export async function createDeal(contactId: string, dealName: string, stage: "booked" | "new"): Promise<string> {

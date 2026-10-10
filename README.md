@@ -85,7 +85,7 @@ Open http://localhost:3000, enter your email, and the sign-in link is printed in
 Do these in order. Each has a quick check.
 
 1. **Resend:** verify your sending domain, set `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`, `FRONT_DESK_EMAIL`.
-2. **HubSpot:** create a private app with contacts and deals read/write. Create the contact property `aangan_decline_reason` (single-line text). Create deal stages "Consultation booked" and "New lead", then copy their IDs into `HUBSPOT_STAGE_*`.
+2. **HubSpot:** create a private app with contacts and deals read/write. Rename two stages in the default deal pipeline (Settings, Objects, Deals, Pipelines): "Appointment scheduled" to "New lead" and "Qualified to buy" to "Consultation booked". The app uses those built-in stages. Optionally create the contact property `aangan_decline_reason` (single-line text); without it the reason is saved as a note.
 3. **Cal.com:** add a webhook to `https://<your-domain>/api/webhooks/calcom` for booking created, rescheduled and cancelled, with a secret in `CALCOM_WEBHOOK_SECRET`. Make a test booking and confirm the phone number and location arrive. Adjust `parseCalcom` in `src/lib/calcom.ts` if the field names differ.
 4. **Vaani:** point the end-of-call webhook at `/api/webhooks/vaani` with the secret. Make a test call, then compare Vaani's real payload against `src/lib/sources/vaani.ts` and `scripts/gen-fixtures.mjs`. These are the only two places that assume the shape. Re-run `npm run gen:fixtures && npm test` after changing them.
 
