@@ -6,6 +6,12 @@ The full requirements are in `aangan-build-spec.md`. This repo is built in the p
 
 **Status:** All five phases are built. What is left cannot be done in code: connect the live accounts (`docs/launch-checklist.md`), then make the live test calls (`tests/agent-test-log.md`). Everything is tested against fixtures and an in-memory database, but has not yet run against live Neon, HubSpot, Resend, Vaani or Cal.com. See "Connecting the live services".
 
+## Components map
+
+![Components map](docs/components-map.png)
+
+Regenerate it with `node scripts/make-components-map.mjs` (add the path to `@resvg/resvg-js` to also write the PNG).
+
 ## The one rule
 
 The system never states a price. No number, range or per-square-foot figure. Pricing documents must never be added to `/agent` or sent to Vaani. `npm run check:no-prices` runs in CI and fails if a figure appears in `/agent`.
