@@ -16,3 +16,6 @@ pricing.md
 # Vercel paste file (contains secrets)
 .env.vercel
 .env.vercel*
+
+# Vaani paste pack (contains a webhook secret)
+vaani-pack/

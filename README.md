@@ -89,6 +89,10 @@ Do these in order. Each has a quick check.
 3. **Cal.com:** add a webhook to `https://<your-domain>/api/webhooks/calcom` for booking created, rescheduled and cancelled, with a secret in `CALCOM_WEBHOOK_SECRET`. Make a test booking and confirm the phone number and location arrive. Adjust `parseCalcom` in `src/lib/calcom.ts` if the field names differ.
 4. **Vaani:** point the end-of-call webhook at `/api/webhooks/vaani` with the secret. Make a test call, then compare Vaani's real payload against `src/lib/sources/vaani.ts` and `scripts/gen-fixtures.mjs`. These are the only two places that assume the shape. Re-run `npm run gen:fixtures && npm test` after changing them.
 
+## Vaani paste pack
+
+`npm run vaani:pack` builds a `vaani-pack` folder from the files in `/agent`: the system prompt, the knowledge files (with our internal TODO notes removed), the post-call fields, and a private file with the webhook address and secret. The folder is git-ignored because it contains a secret. `0-START-HERE.txt` inside it lists the Vaani steps in order.
+
 ## Weekly summary
 
 Every Monday at 09:00 IST (03:30 UTC) Vercel calls `/api/cron/weekly-summary` (set in `vercel.json`). It emails the owner how the week that just ended went: the same four numbers as the dashboard home, plus anything that needs attention. It sends each week only once, even if Vercel repeats the call. Needs `CRON_SECRET` set in Vercel.
