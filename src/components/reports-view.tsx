@@ -12,7 +12,7 @@ function minutes(m: number): string {
   return `${(m / 60).toFixed(1).replace(/\.0$/, "")} hours`;
 }
 
-/** The six charts. Used by the signed-in dashboard and by the public demo. */
+/** The six charts of the signed-in dashboard. */
 export function ReportsView({
   all,
   bookingRows,

@@ -27,9 +27,9 @@ export function parseCallFilters(sp: SP): CallFilters & { raw: { q: string; outc
   };
 }
 
-export function callsHref(params: Record<string, string | undefined>, base = ""): string {
+export function callsHref(params: Record<string, string | undefined>): string {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v);
   const s = qs.toString();
-  return s ? `${base}/calls?${s}` : `${base}/calls`;
+  return s ? `/calls?${s}` : "/calls";
 }

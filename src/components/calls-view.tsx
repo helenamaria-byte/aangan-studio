@@ -6,17 +6,13 @@ import { filterCalls, OUTCOME_LABELS, type CallView } from "@/lib/stats";
 
 const PAGE = 50;
 
-/** The calls list. Used by the signed-in dashboard (base "") and by the public demo (base "/demo"). */
+/** The calls list of the signed-in dashboard. */
 export function CallsView({
   all,
   sp,
-  base = "",
-  canExport = true,
 }: {
   all: CallView[];
   sp: Record<string, string | string[] | undefined>;
-  base?: string;
-  canExport?: boolean;
 }) {
   const f = parseCallFilters(sp);
   const page = Math.max(1, Number(Array.isArray(sp.page) ? sp.page[0] : sp.page) || 1);
@@ -27,7 +23,7 @@ export function CallsView({
   const pageHref = (p: number) => {
     const qs = new URLSearchParams(filterQs);
     qs.set("page", String(p));
-    return `${base}/calls?${qs}`;
+    return `/calls?${qs}`;
   };
   const exportHref = `/calls/export${filterQs.toString() ? `?${filterQs}` : ""}`;
   const hasFilters = filterQs.size > 0;
@@ -36,14 +32,12 @@ export function CallsView({
     <div>
       <div className="flex items-baseline justify-between gap-4">
         <h1 className="text-2xl font-medium">All calls</h1>
-        {canExport && (
-          <a href={exportHref} className="text-sm text-accent hover:underline" download>
-            Download as spreadsheet
-          </a>
-        )}
+        <a href={exportHref} className="text-sm text-accent hover:underline" download>
+          Download as spreadsheet
+        </a>
       </div>
 
-      <form action={`${base}/calls`} className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-6" role="search">
+      <form action="/calls" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-6" role="search">
         <div className="col-span-2 sm:col-span-6">
           <label htmlFor="q" className="sr-only">
             Search by name, number or area
@@ -88,7 +82,7 @@ export function CallsView({
         <div className="col-span-2 flex items-center gap-2 sm:col-span-6">
           <button className={buttonPrimary}>Show calls</button>
           {hasFilters && (
-            <Link href={`${base}/calls`} className={buttonQuiet}>
+            <Link href="/calls" className={buttonQuiet}>
               Clear filters
             </Link>
           )}
@@ -104,7 +98,7 @@ export function CallsView({
             {hasFilters ? "No calls match these filters. Try clearing one of them." : "No calls yet. They will appear here as soon as the agent answers one."}
           </p>
         ) : (
-          <CallList calls={shown} base={base} />
+          <CallList calls={shown} />
         )}
       </div>
 

@@ -8,29 +8,25 @@ import type { AppSettings, Role } from "@/lib/settings";
 import { attentionItems, homeStats, type CallView } from "@/lib/stats";
 import { istDateKey, periodRange, type Period } from "@/lib/time";
 
-/** The home screen. Used by the signed-in dashboard (base "") and by the public demo (base "/demo", read-only). */
+/** The home screen of the signed-in dashboard. */
 export function HomeView({
   calls,
   settings,
   period,
   role,
   now,
-  base = "",
-  readOnly = false,
 }: {
   calls: CallView[];
   settings: AppSettings;
   period: Period;
   role: Role;
   now: Date;
-  base?: string;
-  readOnly?: boolean;
 }) {
   const s = homeStats(calls, settings, period, now);
   const range = periodRange(period, now);
   const range_ = { from: istDateKey(range.start), to: istDateKey(now) };
   const showMoney = role === "owner";
-  const href = (extra: Record<string, string | undefined> = {}) => callsHref({ ...range_, ...extra }, base);
+  const href = (extra: Record<string, string | undefined> = {}) => callsHref({ ...range_, ...extra });
 
   const delta = s.booked - s.prevBooked;
   const bookedNote = `${delta > 0 ? "+" : delta < 0 ? "-" : ""}${Math.abs(delta)} vs ${s.prevLabel}`.replace(/^0 vs/, "Same as");
@@ -41,7 +37,7 @@ export function HomeView({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="sr-only">Home</h1>
-        <PeriodToggle current={period} base={base} />
+        <PeriodToggle current={period} />
       </div>
 
       <section aria-label="Summary" className="mt-6">
@@ -86,7 +82,7 @@ export function HomeView({
       </section>
 
       <div className="mt-4 border-t border-text/10">
-        <NeedsAttention items={attentionItems(calls, now)} base={base} readOnly={readOnly} />
+        <NeedsAttention items={attentionItems(calls, now)} />
       </div>
 
       <section aria-labelledby="latest-h" className="border-t border-text/10 pt-6">
@@ -94,7 +90,7 @@ export function HomeView({
           <h2 id="latest-h" className="text-lg font-medium">
             Latest calls
           </h2>
-          <Link href={`${base}/calls`} className="text-sm text-accent hover:underline">
+          <Link href="/calls" className="text-sm text-accent hover:underline">
             See all calls
           </Link>
         </div>
@@ -104,7 +100,7 @@ export function HomeView({
           </p>
         ) : (
           <div className="mt-2">
-            <CallList calls={calls.slice(0, 8)} base={base} />
+            <CallList calls={calls.slice(0, 8)} />
           </div>
         )}
       </section>

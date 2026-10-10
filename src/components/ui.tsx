@@ -25,13 +25,13 @@ const PERIODS: { key: Period; label: string }[] = [
   { key: "month", label: "This month" },
 ];
 
-export function PeriodToggle({ current, base = "" }: { current: Period; base?: string }) {
+export function PeriodToggle({ current }: { current: Period }) {
   return (
     <nav aria-label="Time period" className="inline-flex rounded-full bg-text/5 p-1 text-sm">
       {PERIODS.map((p) => (
         <Link
           key={p.key}
-          href={p.key === "week" ? base || "/" : `${base}/?period=${p.key}`}
+          href={p.key === "week" ? "/" : `/?period=${p.key}`}
           aria-current={p.key === current ? "page" : undefined}
           className={`rounded-full px-3.5 py-1.5 ${p.key === current ? "bg-bg font-medium shadow-sm" : "text-muted"}`}
         >

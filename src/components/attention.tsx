@@ -4,7 +4,7 @@ import { formatIst } from "@/lib/time";
 import type { AttentionItem } from "@/lib/stats";
 import { buttonPrimary, buttonQuiet } from "./ui";
 
-function Row({ item, base, readOnly }: { item: AttentionItem; base: string; readOnly: boolean }) {
+function Row({ item }: { item: AttentionItem }) {
   const { call, kind, message } = item;
   const who = call.callerName ?? call.callerPhone ?? "Unknown caller";
   const urgent = kind === "complaint";
@@ -12,7 +12,7 @@ function Row({ item, base, readOnly }: { item: AttentionItem; base: string; read
   return (
     <li className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <Link href={`${base}/calls/${call.id}`} className="font-medium hover:underline">
+        <Link href={`/calls/${call.id}`} className="font-medium hover:underline">
           {who}
         </Link>
         <p className={`text-sm ${urgent ? "text-urgent" : "text-warn"}`}>{message}</p>
@@ -20,29 +20,24 @@ function Row({ item, base, readOnly }: { item: AttentionItem; base: string; read
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {readOnly && (
-          <span className="rounded-full bg-text/5 px-3 py-1.5 text-sm text-muted" title="Buttons are switched off in the demo">
-            {kind === "failure" ? "Retry" : kind === "complaint" ? "Mark handled" : "Call back"} (demo)
-          </span>
-        )}
-        {!readOnly && (kind === "no_booking" || kind === "callback") && call.callerPhone && (
+        {(kind === "no_booking" || kind === "callback") && call.callerPhone && (
           <a href={`tel:${call.callerPhone.replace(/\s/g, "")}`} className={buttonPrimary}>
             Call back
           </a>
         )}
-        {!readOnly && kind === "failure" && (
+        {kind === "failure" && (
           <form action={retryFailed}>
             <input type="hidden" name="id" value={call.id} />
             <button className={buttonPrimary}>Retry</button>
           </form>
         )}
-        {!readOnly && kind === "complaint" && (
+        {kind === "complaint" && (
           <form action={markHandled}>
             <input type="hidden" name="id" value={call.id} />
             <button className={buttonPrimary}>Mark handled</button>
           </form>
         )}
-        {!readOnly && (kind === "no_booking" || kind === "callback") && (
+        {(kind === "no_booking" || kind === "callback") && (
           <form action={markHandled}>
             <input type="hidden" name="id" value={call.id} />
             <button className={buttonQuiet}>Mark handled</button>
@@ -53,7 +48,7 @@ function Row({ item, base, readOnly }: { item: AttentionItem; base: string; read
   );
 }
 
-export function NeedsAttention({ items, base = "", readOnly = false }: { items: AttentionItem[]; base?: string; readOnly?: boolean }) {
+export function NeedsAttention({ items }: { items: AttentionItem[] }) {
   if (!items.length) {
     return (
       <section aria-labelledby="attention-h" className="py-6">
@@ -71,7 +66,7 @@ export function NeedsAttention({ items, base = "", readOnly = false }: { items: 
       </h2>
       <ul className="mt-1 divide-y divide-text/10">
         {items.map((i) => (
-          <Row key={i.call.id} item={i} base={base} readOnly={readOnly} />
+          <Row key={i.call.id} item={i} />
         ))}
       </ul>
     </section>
