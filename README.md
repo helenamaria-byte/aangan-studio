@@ -12,6 +12,10 @@ The full requirements are in `aangan-build-spec.md`. This repo is built in the p
 
 Regenerate it with `node scripts/make-components-map.mjs` (add the path to `@resvg/resvg-js` to also write the PNG).
 
+## The look
+
+The first page (`/`) is a pair of closed timber doors with a "Let's get in" button. The doors swing open onto a lit room, the view moves in, and you arrive at the dashboard (`/studio`). Everything is drawn in CSS, with no image files. Titles and big numbers use Cormorant Garamond, a display serif, and the rest uses Figtree. People who prefer less motion skip the animation.
+
 ## The one rule
 
 The system never states a price. No number, range or per-square-foot figure. Pricing documents must never be added to `/agent` or sent to Vaani. `npm run check:no-prices` runs in CI and fails if a figure appears in `/agent`.

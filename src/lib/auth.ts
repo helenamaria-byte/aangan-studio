@@ -95,6 +95,6 @@ export async function requireViewer(): Promise<Viewer> {
 export async function requireUser(role?: Role): Promise<AppUser> {
   const user = await getSession();
   if (!user) redirect("/login");
-  if (role === "owner" && user.role !== "owner") redirect("/");
+  if (role === "owner" && user.role !== "owner") redirect("/studio");
   return user;
 }

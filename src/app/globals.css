@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #fafaf7;
+  --bg: #fbf9f4;
   --text: #2b2522;
   --muted: #7a716b;
   --accent: #4f6b5a;
   --warn: #b7791f;
   --urgent: #b42318;
+  --brass: #b08d4b;
 }
 
 @theme inline {
@@ -16,11 +17,68 @@
   --color-accent: var(--accent);
   --color-warn: var(--warn);
   --color-urgent: var(--urgent);
+  --color-brass: var(--brass);
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
 }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(120% 60% at 50% -10%, #fffdf8 0%, transparent 60%),
+    linear-gradient(#fbf9f4, #f6f1e8 60%, #f2ece1);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-figtree), system-ui, sans-serif;
   font-weight: 400;
+}
+
+/* Titles and big numbers use the display serif. Body text and data stay in the sans for easy reading. */
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+/* Serif lining figures read cleanly next to text. */
+.font-display {
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
+}
+
+/* A thin brass rule, used sparingly as a mark of care. */
+.brass-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brass) 20%, var(--brass) 80%, transparent);
+  opacity: 0.55;
+}
+
+/* The dashboard settles in as the light from the doorway fades. */
+.dash-enter {
+  animation: dashIn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+@keyframes dashIn {
+  from {
+    opacity: 0;
+    transform: scale(1.012);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Small labels stay in the sans, even inside an h2. */
+.font-ui {
+  font-family: var(--font-figtree), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

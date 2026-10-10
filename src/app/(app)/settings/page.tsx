@@ -22,7 +22,7 @@ const ERRORS: Record<string, string> = {
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="border-t border-text/10 py-8">
-      <h2 className="text-lg font-medium">{title}</h2>
+      <h2 className="text-[1.7rem] font-medium">{title}</h2>
       {hint && <p className="mt-1 text-muted">{hint}</p>}
       <div className="mt-4">{children}</div>
     </section>
@@ -48,7 +48,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
 
   return (
     <div>
-      <h1 className="text-2xl font-medium">Settings</h1>
+      <h1 className="text-4xl font-medium">Settings</h1>
       <div className="mt-4 space-y-3">
         {saved && SAVED[saved] && <Notice tone="success">{SAVED[saved]}</Notice>}
         {error && ERRORS[error] && <Notice tone="error">{ERRORS[error]}</Notice>}

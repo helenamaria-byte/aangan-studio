@@ -31,7 +31,7 @@ export function PeriodToggle({ current }: { current: Period }) {
       {PERIODS.map((p) => (
         <Link
           key={p.key}
-          href={p.key === "week" ? "/" : `/?period=${p.key}`}
+          href={p.key === "week" ? "/studio" : `/studio?period=${p.key}`}
           aria-current={p.key === current ? "page" : undefined}
           className={`rounded-full px-3.5 py-1.5 ${p.key === current ? "bg-bg font-medium shadow-sm" : "text-muted"}`}
         >
@@ -46,8 +46,17 @@ export function Stat({ label, value, note, href }: { label: string; value: strin
   return (
     <Link href={href} className="block rounded-lg py-3 pr-2 hover:bg-text/[0.03] focus-visible:outline-2 focus-visible:outline-accent">
       <div className="text-sm text-muted">{label}</div>
-      <div className="mt-1 text-3xl font-medium tracking-tight">{value}</div>
-      <div className="mt-1 text-sm text-muted">{note}</div>
+      <div className="font-display mt-1 whitespace-nowrap text-[2.6rem] font-medium leading-none tracking-tight sm:text-5xl">
+        {value.match(/^(.*?)\s(lakh|crore)$/) ? (
+          <>
+            {value.replace(/\s(lakh|crore)$/, "")}
+            <span className="font-ui ml-1.5 text-base font-normal tracking-normal text-muted">{value.match(/(lakh|crore)$/)?.[0]}</span>
+          </>
+        ) : (
+          value
+        )}
+      </div>
+      <div className="mt-2 text-sm text-muted">{note}</div>
     </Link>
   );
 }

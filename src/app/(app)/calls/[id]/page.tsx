@@ -57,7 +57,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
 
       <header className="mt-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-medium">{c.callerName ?? c.callerPhone ?? "Unknown caller"}</h1>
+          <h1 className="text-4xl font-medium">{c.callerName ?? c.callerPhone ?? "Unknown caller"}</h1>
           <OutcomeBadge outcome={c.outcome} />
         </div>
         <p className="mt-1 text-muted">
@@ -84,21 +84,21 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
       )}
 
       <section className="mt-6">
-        <h2 className="text-lg font-medium">Summary</h2>
+        <h2 className="text-[1.7rem] font-medium">Summary</h2>
         <p className="mt-1">{c.summary ?? "No summary was captured for this call."}</p>
         {c.declineReason && <p className="mt-1 text-muted">Reason: {c.declineReason.replace(/_/g, " ")}</p>}
       </section>
 
       {note && (
         <section className="mt-6">
-          <h2 className="text-lg font-medium">{note.title}</h2>
+          <h2 className="text-[1.7rem] font-medium">{note.title}</h2>
           <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-text/[0.04] p-4 font-[inherit] text-base leading-relaxed">{note.text}</pre>
         </section>
       )}
 
       {booking && (
         <section className="mt-6">
-          <h2 className="text-lg font-medium">Booking</h2>
+          <h2 className="text-[1.7rem] font-medium">Booking</h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
             <dt className="text-muted">When</dt>
             <dd>{formatIst(booking.startsAt)} IST</dd>
@@ -114,7 +114,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
 
       {user.role === "owner" && (
         <section className="mt-6">
-          <h2 className="text-lg font-medium">Cost of this call</h2>
+          <h2 className="text-[1.7rem] font-medium">Cost of this call</h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
             <dt className="text-muted">Voice</dt>
             <dd>{formatInr(c.costVoice)}</dd>
@@ -129,7 +129,7 @@ export default async function CallDetail({ params }: { params: Promise<{ id: str
       )}
 
       <section className="mt-6">
-        <h2 className="text-lg font-medium">Links</h2>
+        <h2 className="text-[1.7rem] font-medium">Links</h2>
         <ul className="mt-2 space-y-1 text-accent">
           {c.recordingUrl && <li><a className="hover:underline" href={c.recordingUrl} target="_blank" rel="noreferrer">Listen to the recording</a></li>}
           {c.transcriptUrl && <li><a className="hover:underline" href={c.transcriptUrl} target="_blank" rel="noreferrer">Open the transcript</a></li>}

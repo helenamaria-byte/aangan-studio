@@ -64,7 +64,7 @@ export function ReportsView({
 
   return (
     <div>
-      <h1 className="text-2xl font-medium">Reports</h1>
+      <h1 className="text-4xl font-medium">Reports</h1>
       <p className="mt-1 text-muted">The last 30 days unless it says otherwise. Hover or tap a bar for the exact figure.</p>
 
       <ChartCard

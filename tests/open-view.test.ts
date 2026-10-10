@@ -43,7 +43,7 @@ describe("visitors can look but never change anything", () => {
     expect(read("src/app/(app)/calls/export/route.ts")).not.toMatch(/requireViewer|viewerFor/);
   });
   it("only the looking pages use the visitor view", () => {
-    for (const f of ["src/app/(app)/page.tsx", "src/app/(app)/calls/page.tsx", "src/app/(app)/reports/page.tsx", "src/app/(app)/calls/[id]/page.tsx", "src/app/(app)/layout.tsx"]) {
+    for (const f of ["src/app/(app)/studio/page.tsx", "src/app/(app)/calls/page.tsx", "src/app/(app)/reports/page.tsx", "src/app/(app)/calls/[id]/page.tsx", "src/app/(app)/layout.tsx"]) {
       expect(read(f), f).toMatch(/requireViewer/);
     }
   });

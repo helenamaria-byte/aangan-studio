@@ -42,20 +42,20 @@ export function HomeView({
 
       <section aria-label="Summary" className="mt-6">
         {s.total === 0 ? (
-          <p className="text-2xl leading-snug">
+          <p className="font-display text-[1.9rem] leading-[1.22] sm:text-[2.7rem]">
             No calls yet {period === "today" ? "today" : period === "week" ? "this week" : "this month"}.{" "}
             <span className="text-muted">
               The agent is live{settings.studioPhone ? ` on ${settings.studioPhone}` : ""} and will answer the next call, day or night.
             </span>
           </p>
         ) : (
-          <p className="text-2xl leading-snug">
+          <p className="font-display text-[1.9rem] leading-[1.22] sm:text-[2.7rem]">
             {s.label} the agent answered{" "}
-            <span className="font-medium">
+            <span className="italic text-accent">
               {formatCount(s.answered)} of {formatCount(s.total)} {s.total === 1 ? "call" : "calls"}
             </span>
-            , including <span className="font-medium">{formatCount(s.afterHours)} after hours</span>, and booked{" "}
-            <span className="font-medium">{plural(s.booked, "consultation", "consultations")}</span>.
+            , including <span className="italic text-accent">{formatCount(s.afterHours)} after hours</span>, and booked{" "}
+            <span className="italic text-accent">{plural(s.booked, "consultation", "consultations")}</span>.
           </p>
         )}
       </section>
@@ -87,7 +87,7 @@ export function HomeView({
 
       <section aria-labelledby="latest-h" className="border-t border-text/10 pt-6">
         <div className="flex items-baseline justify-between">
-          <h2 id="latest-h" className="text-lg font-medium">
+          <h2 id="latest-h" className="text-[1.7rem] font-medium">
             Latest calls
           </h2>
           <Link href="/calls" className="text-sm text-accent hover:underline">

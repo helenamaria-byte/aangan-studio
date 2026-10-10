@@ -61,7 +61,7 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
   }
   return (
     <section aria-labelledby="attention-h" className="py-6">
-      <h2 id="attention-h" className="text-lg font-medium">
+      <h2 id="attention-h" className="text-[1.7rem] font-medium">
         Needs attention <span className="text-muted">({items.length})</span>
       </h2>
       <ul className="mt-1 divide-y divide-text/10">

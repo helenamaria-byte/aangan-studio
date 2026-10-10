@@ -31,7 +31,7 @@ export function CallsView({
   return (
     <div>
       <div className="flex items-baseline justify-between gap-4">
-        <h1 className="text-2xl font-medium">All calls</h1>
+        <h1 className="text-4xl font-medium">All calls</h1>
         <a href={exportHref} className="text-sm text-accent hover:underline" download>
           Download as spreadsheet
         </a>

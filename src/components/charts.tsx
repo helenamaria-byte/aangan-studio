@@ -42,7 +42,7 @@ export function ChartCard({
 }) {
   return (
     <section className="border-t border-text/10 py-8" aria-labelledby={`h-${title.replace(/\W+/g, "-")}`}>
-      <h2 id={`h-${title.replace(/\W+/g, "-")}`} className="text-sm text-muted">
+      <h2 id={`h-${title.replace(/\W+/g, "-")}`} className="font-ui text-sm text-muted">
         {title}
       </h2>
       <p className="mt-1 text-xl leading-snug">{takeaway}</p>

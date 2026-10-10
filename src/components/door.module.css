@@ -1,0 +1,418 @@
+/* The entry page: a pair of timber doors, closed. "Let's get in" swings them open onto a warm, lit room. */
+
+.scene {
+  --stage-w: min(86vw, calc(50svh * 0.8), 500px);
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  justify-items: center;
+  background:
+    radial-gradient(90% 70% at 50% 30%, rgba(255, 252, 244, 0.95) 0%, rgba(255, 252, 244, 0) 70%),
+    linear-gradient(#f4ede0 0%, #eadfcb 100%);
+  color: #2b2522;
+}
+
+/* soft vignette to draw the eye to the door */
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 42%, transparent 55%, rgba(70, 48, 24, 0.22) 100%);
+}
+
+/* ---------- intro text ---------- */
+.intro {
+  text-align: center;
+  padding: clamp(22px, 5svh, 54px) 24px clamp(16px, 3svh, 30px);
+  animation: rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  transition: opacity 0.7s ease, transform 0.9s ease;
+  z-index: 2;
+}
+.kicker {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  color: #8a6f3e;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.6rem, 8.5vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: #2b2118;
+}
+.rule {
+  width: 84px;
+  height: 1px;
+  margin: 16px auto 14px;
+  background: linear-gradient(90deg, transparent, #b08d4b, transparent);
+}
+.sub {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.15rem, 3.4vw, 1.5rem);
+  color: #6b5a45;
+}
+
+/* ---------- stage: frame, doors, room ---------- */
+.stageWrap {
+  position: relative;
+  z-index: 1;
+  width: var(--stage-w);
+  aspect-ratio: 4 / 5;
+  transform-origin: 50% 62%;
+  transition: transform 1s cubic-bezier(0.55, 0, 0.9, 0.4);
+  animation: rise 1.2s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  cursor: pointer;
+}
+
+/* glow around the doorway as the room is revealed */
+.bloom {
+  position: absolute;
+  inset: -22% -34% -4%;
+  background: radial-gradient(50% 56% at 50% 58%, rgba(255, 226, 158, 0.95), rgba(255, 226, 158, 0) 70%);
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 1.3s ease 0.45s;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  padding: 4.6% 4.6% 0;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, #fbf7ee 0%, #eadfcb 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(120, 95, 60, 0.18),
+    0 38px 60px -26px rgba(55, 38, 20, 0.6);
+}
+/* the cornice above the door */
+.frame::before {
+  content: "";
+  position: absolute;
+  top: -2.4%;
+  left: -3.6%;
+  right: -3.6%;
+  height: 3.6%;
+  border-radius: 4px;
+  background: linear-gradient(#ffffff, #eadfcb);
+  box-shadow: 0 6px 10px -4px rgba(55, 38, 20, 0.4), inset 0 -1px 0 rgba(120, 95, 60, 0.3);
+}
+
+.doorway {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  perspective: 1500px;
+  background: #2a1c10;
+  border-radius: 2px 2px 0 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- the room behind the doors ---------- */
+.interior {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(75% 65% at 50% 50%, #fff6dc 0%, #f4d99f 48%, #d0a15d 100%);
+}
+.arch {
+  position: absolute;
+  left: 27%;
+  right: 27%;
+  top: 14%;
+  bottom: 38%;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #fffef8 0%, #fdeec7 100%);
+  box-shadow: 0 0 70px 24px rgba(255, 236, 180, 0.75), inset 0 0 0 5px rgba(176, 141, 75, 0.55);
+}
+.arch::before,
+.arch::after {
+  content: "";
+  position: absolute;
+  background: rgba(176, 141, 75, 0.5);
+}
+.arch::before {
+  left: 50%;
+  top: 8%;
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+}
+.arch::after {
+  left: 0;
+  right: 0;
+  top: 46%;
+  height: 3px;
+}
+.lamp {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 17%;
+  background: #6a5036;
+  transform: translateX(-50%);
+}
+.lamp::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  width: 52px;
+  height: 30px;
+  transform: translateX(-50%);
+  border-radius: 50px 50px 6px 6px;
+  background: radial-gradient(circle at 50% 80%, #fff6cf, #e8b64f 70%);
+  box-shadow: 0 10px 40px 14px rgba(255, 214, 120, 0.85);
+}
+.bench {
+  position: absolute;
+  left: 21%;
+  right: 21%;
+  bottom: 30%;
+  height: 8%;
+  border-radius: 8px 8px 3px 3px;
+  background: linear-gradient(#8a6844, #6a4b2e);
+  box-shadow: 0 8px 14px -6px rgba(60, 38, 14, 0.6);
+}
+.bench::before,
+.bench::after {
+  content: "";
+  position: absolute;
+  bottom: -70%;
+  width: 3%;
+  height: 70%;
+  background: #4f3822;
+}
+.bench::before {
+  left: 8%;
+}
+.bench::after {
+  right: 8%;
+}
+.floorIn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30%;
+  background:
+    repeating-linear-gradient(90deg, rgba(90, 58, 24, 0.12) 0 2px, transparent 2px 46px),
+    linear-gradient(#e0b97c 0%, #c1904f 100%);
+  box-shadow: inset 0 14px 20px -12px rgba(110, 72, 28, 0.55);
+}
+/* the room is dark until the doors open, then the light comes on */
+.dim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 55%, rgba(40, 25, 10, 0.2), rgba(24, 14, 6, 0.82));
+  transition: opacity 1.5s ease 0.3s;
+}
+
+/* ---------- the doors ---------- */
+.leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+  transition: transform 1.55s cubic-bezier(0.22, 0.8, 0.2, 1);
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 9px),
+    linear-gradient(90deg, #5a3b26 0%, #6e4a31 48%, #54361f 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), inset 0 0 40px rgba(0, 0, 0, 0.35);
+}
+.left {
+  left: 0;
+  transform-origin: left center;
+}
+.right {
+  right: 0;
+  transform-origin: right center;
+}
+.panelTop,
+.panelBottom {
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  border-radius: 3px;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 0 0 5px rgba(255, 255, 255, 0.04),
+    inset 0 8px 16px rgba(0, 0, 0, 0.38),
+    0 1px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.1));
+}
+.panelTop {
+  top: 6%;
+  height: 38%;
+}
+.panelBottom {
+  top: 50%;
+  bottom: 6%;
+}
+/* a rail of brass-coloured light along the meeting edge */
+.left::after,
+.right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(#e8c673, #b08d4b);
+  opacity: 0.55;
+}
+.left::after {
+  right: 0;
+}
+.right::after {
+  left: 0;
+}
+.knob {
+  position: absolute;
+  top: 53%;
+  width: clamp(16px, 6%, 30px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fff4c7 0%, #e6bd55 36%, #9a6b1e 100%);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(0, 0, 0, 0.16), 0 0 0 5px rgba(232, 198, 115, 0.35);
+}
+.left .knob {
+  right: 7%;
+}
+.right .knob {
+  left: 7%;
+}
+
+/* ---------- floor, button ---------- */
+.floor {
+  position: relative;
+  width: 100%;
+  margin-top: -1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(22px, 4svh, 40px) 20px 40px;
+  background:
+    repeating-linear-gradient(90deg, rgba(80, 52, 22, 0.1) 0 2px, transparent 2px 120px),
+    linear-gradient(#d8bf99 0%, #bfa27a 45%, #a98a63 100%);
+  box-shadow: inset 0 16px 24px -14px rgba(60, 40, 18, 0.5);
+  z-index: 2;
+  transition: opacity 0.7s ease;
+}
+.floor::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(80vw, 560px);
+  height: 22svh;
+  transform: translateX(-50%);
+  background: radial-gradient(60% 100% at 50% 0%, rgba(255, 233, 172, 0.85), transparent 72%);
+  opacity: 0;
+  transition: opacity 1.3s ease 0.6s;
+  pointer-events: none;
+}
+
+.cta {
+  position: relative;
+  padding: 15px 38px;
+  border-radius: 999px;
+  border: 1px solid #c9a24d;
+  background: linear-gradient(#3a2e25, #241b14);
+  color: #f6e6b9;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -8px rgba(30, 18, 6, 0.6), inset 0 1px 0 rgba(255, 235, 170, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.5s ease;
+  animation: rise 1s 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+.cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -8px rgba(30, 18, 6, 0.65), 0 0 0 4px rgba(201, 162, 77, 0.22), inset 0 1px 0 rgba(255, 235, 170, 0.3);
+}
+.cta:focus-visible,
+.staff:focus-visible {
+  outline: 3px solid #f6e6b9;
+  outline-offset: 4px;
+}
+.cta:disabled {
+  cursor: default;
+}
+.staff {
+  font-size: 0.95rem;
+  color: #43362a;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(67, 54, 42, 0.4);
+}
+
+/* a glowing wash that floods the screen as we walk in */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 55%, #fffaf0 0%, #f7e6bd 60%, #f1d9a0 100%);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+/* ---------- states ---------- */
+.open .leaf.left {
+  transform: rotateY(-106deg);
+}
+.open .leaf.right {
+  transform: rotateY(106deg);
+}
+.open .dim {
+  opacity: 0;
+}
+.open .bloom,
+.open .floor::before {
+  opacity: 1;
+}
+.open .intro,
+.open .cta,
+.open .staff {
+  opacity: 0;
+  pointer-events: none;
+}
+.leaving .stageWrap {
+  transform: scale(2.4);
+}
+.leaving .veil {
+  opacity: 1;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* small phones: tighter, so the door and the button both fit */
+@media (max-height: 640px) {
+  .scene {
+    --stage-w: min(80vw, calc(44svh * 0.8), 420px);
+  }
+}

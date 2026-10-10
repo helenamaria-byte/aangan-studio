@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   if (!user) {
     return NextResponse.redirect(new URL("/login?error=expired", url.origin));
   }
-  const res = NextResponse.redirect(new URL("/", url.origin));
+  const res = NextResponse.redirect(new URL("/studio", url.origin));
   res.cookies.set(SESSION_COOKIE, createSessionToken(user.email), sessionCookieOptions);
   return res;
 }
