@@ -4,7 +4,7 @@ Answers every call to the studio with a Vaani.ai voice agent, books a consultati
 
 The full requirements are in `aangan-build-spec.md`. This repo is built in the phase order given there.
 
-**Status:** Phases 1 to 4 are built: foundation, agent files, call pipeline, and dashboard. Phase 5 (live test calls, weekly summary email, launch checks) is next. Everything is tested against fixtures and an in-memory database, but has not yet run against live Neon, HubSpot, Resend, Vaani or Cal.com. See "Connecting the live services".
+**Status:** All five phases are built. What is left cannot be done in code: connect the live accounts (`docs/launch-checklist.md`), then make the live test calls (`tests/agent-test-log.md`). Everything is tested against fixtures and an in-memory database, but has not yet run against live Neon, HubSpot, Resend, Vaani or Cal.com. See "Connecting the live services".
 
 ## The one rule
 
@@ -89,14 +89,27 @@ Do these in order. Each has a quick check.
 3. **Cal.com:** add a webhook to `https://<your-domain>/api/webhooks/calcom` for booking created, rescheduled and cancelled, with a secret in `CALCOM_WEBHOOK_SECRET`. Make a test booking and confirm the phone number and location arrive. Adjust `parseCalcom` in `src/lib/calcom.ts` if the field names differ.
 4. **Vaani:** point the end-of-call webhook at `/api/webhooks/vaani` with the secret. Make a test call, then compare Vaani's real payload against `src/lib/sources/vaani.ts` and `scripts/gen-fixtures.mjs`. These are the only two places that assume the shape. Re-run `npm run gen:fixtures && npm test` after changing them.
 
+## Weekly summary
+
+Every Monday at 09:00 IST (03:30 UTC) Vercel calls `/api/cron/weekly-summary` (set in `vercel.json`). It emails the owner how the week that just ended went: the same four numbers as the dashboard home, plus anything that needs attention. It sends each week only once, even if Vercel repeats the call. Needs `CRON_SECRET` set in Vercel.
+
+## Launching
+
+Follow `docs/launch-checklist.md`. The live test calls are logged in `tests/agent-test-log.md`. To check a transcript for spoken prices:
+
+```bash
+npm run check:leak -- path/to/transcript.txt
+```
+
 ## Tests
 
-`npm test` runs 125 checks:
+`npm test` runs 152 checks:
 
 - one fake Vaani payload for each of the 20 September phone transcripts (`tests/fixtures/`): outcomes, routing, and email completeness;
 - the full pipeline against a real in-memory Postgres with HubSpot and Resend faked: repeat deliveries, either webhook arriving first, retries, failures showing under Needs attention, and the complaint alert going out first;
 - every dashboard number, including cost = per-call costs + fixed costs, IST periods, Indian formats, and CSV safety;
-- sign-in link and session security.
+- sign-in link and session security;
+- the weekly summary, its schedule and send-once rule, and the pricing-leak scanner.
 
 ## Secrets
 

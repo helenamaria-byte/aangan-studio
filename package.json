@@ -12,7 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "test": "vitest run",
     "gen:fixtures": "node scripts/gen-fixtures.mjs",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "check:leak": "node scripts/check-pricing-leak.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.17",

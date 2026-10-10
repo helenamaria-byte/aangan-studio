@@ -18,5 +18,7 @@ jobs:
         run: npm run check:no-prices
       - name: Type check
         run: npm run typecheck
+      - name: Build
+        run: npm run build
       - name: Tests
         run: npm test
