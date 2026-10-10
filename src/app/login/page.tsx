@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requestLogin } from "@/app/actions";
 import { Notice, buttonPrimary, inputClass } from "@/components/ui";
@@ -26,6 +27,14 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <input id="email" name="email" type="email" required autoComplete="email" autoFocus className={inputClass} />
           <button className={`${buttonPrimary} w-full`}>Email me a sign-in link</button>
         </form>
+
+        <p className="border-t border-text/10 pt-4 text-sm text-muted">
+          Just looking?{" "}
+          <Link href="/demo" className="text-accent hover:underline">
+            View the demo with sample data
+          </Link>
+          . No sign-in needed.
+        </p>
       </div>
     </main>
   );

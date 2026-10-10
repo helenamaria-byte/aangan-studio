@@ -58,6 +58,10 @@ Sign in with an email link (no password). Who may sign in is set on the Settings
 
 **Needs attention** lists complaints, qualified leads with no booking, dropped calls that need a callback, failed emails or CRM updates, and any booked call whose designer email has not gone out after 5 minutes. Each row has one action: Mark handled, Call back, or Retry.
 
+## Public demo (no sign-in)
+
+`/demo` is a read-only copy of the dashboard on built-in sample data: Home, Calls, a call's detail, and Reports. It never touches the database, so anyone can be given the link. Every button is switched off and a banner says the data is made up. The real dashboard still needs a sign-in.
+
 ## Try it without any accounts
 
 The dashboard can run on an embedded local database with a month of demo data. This is for development only and is never used on Vercel.
