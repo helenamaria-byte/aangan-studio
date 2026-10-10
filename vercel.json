@@ -1,3 +1,4 @@
 {
+  "regions": ["sin1"],
   "crons": [{ "path": "/api/cron/weekly-summary", "schedule": "30 3 * * 1" }]
 }

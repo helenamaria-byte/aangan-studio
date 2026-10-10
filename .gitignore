@@ -12,3 +12,6 @@ pricing.md
 **/pricing.md
 .transcripts.txt
 .pglite
+
+# Vercel paste file (contains secrets)
+.env.vercel
