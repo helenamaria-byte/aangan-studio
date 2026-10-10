@@ -2,7 +2,7 @@ import Link from "next/link";
 import { markHandled, retryFailed } from "@/app/actions";
 import { formatIst } from "@/lib/time";
 import type { AttentionItem } from "@/lib/stats";
-import { buttonPrimary, buttonQuiet } from "./ui";
+import { SectionTitle, buttonPrimary, buttonQuiet } from "./ui";
 
 function Row({ item }: { item: AttentionItem }) {
   const { call, kind, message } = item;
@@ -61,9 +61,9 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
   }
   return (
     <section aria-labelledby="attention-h" className="py-6">
-      <h2 id="attention-h" className="text-[1.7rem] font-medium">
-        Needs attention <span className="text-muted">({items.length})</span>
-      </h2>
+      <SectionTitle id="attention-h" count={items.length}>
+        Needs attention
+      </SectionTitle>
       <ul className="mt-1 divide-y divide-text/10">
         {items.map((i) => (
           <Row key={i.call.id} item={i} />

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wordmark } from "@/components/brand";
+import { ArchMark, Wordmark } from "@/components/brand";
 import { NavLinks } from "@/components/nav-links";
 import { logout } from "@/app/actions";
 import { requireViewer } from "@/lib/auth";
@@ -41,6 +41,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </p>
       )}
       <main className="dash-enter">{children}</main>
+      <footer className="mt-16">
+        <div className="brass-rule" aria-hidden />
+        <div className="mt-6 flex flex-col items-center gap-2 text-center">
+          <ArchMark size={26} />
+          <p className="font-display text-lg italic text-muted">Aangan Studio · interior design, Pune</p>
+        </div>
+      </footer>
     </div>
   );
 }

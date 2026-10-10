@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { NeedsAttention } from "@/components/attention";
 import { CallList } from "@/components/call-list";
-import { PeriodToggle, Stat } from "@/components/ui";
+import { RoomVignette } from "@/components/room-vignette";
+import { PeriodToggle, SectionTitle, Stat } from "@/components/ui";
 import { formatCount, formatInr, formatInrShort } from "@/lib/format";
 import { callsHref } from "@/lib/params";
 import type { AppSettings, Role } from "@/lib/settings";
@@ -35,6 +36,9 @@ export function HomeView({
 
   return (
     <div>
+      <div className="mb-7 -mt-1 opacity-95">
+        <RoomVignette />
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="sr-only">Home</h1>
         <PeriodToggle current={period} />
@@ -60,18 +64,20 @@ export function HomeView({
         )}
       </section>
 
-      <section aria-label="Key numbers" className="mt-8 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
-        <Stat label="Calls answered" value={formatCount(s.answered)} note={`${answeredPct}% answered · ${formatCount(s.afterHours)} after hours`} href={href()} />
-        <Stat label="Consultations booked" value={formatCount(s.booked)} note={bookedNote} href={href({ outcome: "qualified_booked" })} />
+      <section aria-label="Key numbers" className="swatches mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Stat material="linen" label="Calls answered" value={formatCount(s.answered)} note={`${answeredPct}% answered · ${formatCount(s.afterHours)} after hours`} href={href()} />
+        <Stat material="sage" label="Consultations booked" value={formatCount(s.booked)} note={bookedNote} href={href({ outcome: "qualified_booked" })} />
         {showMoney && (
           <>
             <Stat
+              material="stone"
               label="Est. pipeline value"
               value={formatInrShort(s.pipelineInr)}
               note={`${s.booked} bookings × avg ${formatInrShort(settings.averageProjectValueInr)} (estimate)`}
               href={href({ outcome: "qualified_booked" })}
             />
             <Stat
+              material="walnut"
               label={`Cost ${s.label.toLowerCase()}`}
               value={formatInr(s.totalCostInr)}
               note={s.costPerBookedInr === null ? "No bookings yet" : `${formatInr(s.costPerBookedInr)} per booked consultation`}
@@ -87,9 +93,7 @@ export function HomeView({
 
       <section aria-labelledby="latest-h" className="border-t border-text/10 pt-6">
         <div className="flex items-baseline justify-between">
-          <h2 id="latest-h" className="text-[1.7rem] font-medium">
-            Latest calls
-          </h2>
+          <SectionTitle id="latest-h">Latest calls</SectionTitle>
           <Link href="/calls" className="text-sm text-accent hover:underline">
             See all calls
           </Link>
