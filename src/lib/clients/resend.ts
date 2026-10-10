@@ -3,7 +3,8 @@ import type { BuiltEmail } from "../emails";
 export async function sendEmail(to: string | string[], email: BuiltEmail): Promise<string> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
-  if (!key || !from) throw new Error("RESEND_API_KEY or EMAIL_FROM is not set");
+  const missing = [!key && "RESEND_API_KEY", !from && "EMAIL_FROM"].filter(Boolean);
+  if (!key || !from) throw new Error(`Email is not set up: missing ${missing.join(" and ")} in the environment variables`);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
