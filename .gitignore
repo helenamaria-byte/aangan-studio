@@ -1,0 +1,13 @@
+node_modules
+.next
+.env
+.env.local
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# Never commit pricing or raw transcripts
+pricing.md
+**/pricing.md
+.transcripts.txt
