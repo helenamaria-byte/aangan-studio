@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t05",
+  "started_at": "2026-09-05T05:22:00.000Z",
+  "ended_at": "2026-09-05T05:28:44.000Z",
+  "duration_seconds": 404,
+  "from_number": "+919800000005",
+  "transcript_url": "https://example.invalid/transcripts/T05",
+  "recording_url": "https://example.invalid/recordings/T05",
+  "cost": {
+    "currency": "INR",
+    "voice": 18.18,
+    "telephony": 4.85,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000005",
+    "caller_name": "Aarti Mehta",
+    "locality": "Koregaon Park",
+    "property_type": "apartment",
+    "size_sqft": 2400,
+    "scope_summary": "Complete redesign of a 4BHK: new flooring, kitchen, four bedrooms",
+    "timeline_text": "Move back by February",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Referred through a friend of Nikhil's. Site visit requested",
+    "language": "English",
+    "summary": "Large 4BHK, family already moved out. Site visit booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

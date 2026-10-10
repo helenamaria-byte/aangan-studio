@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t12",
+  "started_at": "2026-09-15T04:35:00.000Z",
+  "ended_at": "2026-09-15T04:42:30.000Z",
+  "duration_seconds": 450,
+  "from_number": "+919800000012",
+  "transcript_url": "https://example.invalid/transcripts/T12",
+  "recording_url": "https://example.invalid/recordings/T12",
+  "cost": {
+    "currency": "INR",
+    "voice": 20.25,
+    "telephony": 5.4,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000012",
+    "caller_name": "Anand Sharma",
+    "locality": "Kalyani Nagar",
+    "property_type": "villa",
+    "size_sqft": 5500,
+    "scope_summary": "Full end-to-end design of a new three-level villa",
+    "timeline_text": "Move in March next year",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Wants the principal designer on site",
+    "language": "English",
+    "summary": "New empty villa, 5,500 sq ft. Site visit booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

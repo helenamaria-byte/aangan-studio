@@ -4,7 +4,7 @@ Answers every call to the studio with a Vaani.ai voice agent, books a consultati
 
 The full requirements are in `aangan-build-spec.md`. This repo is built in the phase order given there.
 
-**Status:** Phase 1 (foundation) and Phase 2 (agent files) are done. The call pipeline and dashboard are next.
+**Status:** Phases 1 (foundation), 2 (agent files) and 3 (call pipeline) are built. The dashboard (Phase 4) is next. The pipeline is tested with fixtures but has not yet run against live Neon, HubSpot, Resend, Vaani or Cal.com. See "Connecting the live services".
 
 ## The one rule
 
@@ -35,6 +35,27 @@ The system never states a price. No number, range or per-square-foot figure. Pri
 5. **Run it:** `npm run dev`, then open http://localhost:3000.
 6. **Deploy:** import this GitHub repo into Vercel. Add every variable from `.env.example` under Settings, Environment Variables. Every push to `main` deploys automatically.
 7. **Set up Vaani:** follow `agent/tools.md`, paste `agent/system-prompt.md`, upload the four files in `agent/knowledge/`.
+
+## How a call flows
+
+1. Cal.com books the slot **during** the call and sends its webhook to `/api/webhooks/calcom`. The booking is saved with the caller's phone number.
+2. When the call ends, Vaani sends its webhook to `/api/webhooks/vaani`. The raw payload is saved first, then parsed.
+3. Routing by outcome (`src/lib/plan.ts`): booked leads get a HubSpot contact, deal and note, plus the designer handoff email. Leads with no booking go to the front desk. Complaints email Nikhil first, before anything else. Declined callers get a HubSpot contact only. Dropped calls under 60 seconds show as "Needs callback".
+4. Either webhook can arrive first. Whichever comes second sends the handoff email.
+5. Every external call is tried 3 times. If it still fails, the call is flagged `needs_attention` with the error. The lead is never lost.
+
+## Connecting the live services
+
+Do these in order. Each has a quick check.
+
+1. **Resend:** verify your sending domain, set `RESEND_API_KEY`, `EMAIL_FROM`, `OWNER_EMAIL`, `FRONT_DESK_EMAIL`.
+2. **HubSpot:** create a private app with contacts and deals read/write. Create the contact property `aangan_decline_reason` (single-line text). Create deal stages "Consultation booked" and "New lead", then copy their IDs into `HUBSPOT_STAGE_*`.
+3. **Cal.com:** add a webhook to `https://<your-domain>/api/webhooks/calcom` for booking created, rescheduled and cancelled, with a secret in `CALCOM_WEBHOOK_SECRET`. Make a test booking and confirm the phone number and location arrive. Adjust `parseCalcom` in `src/lib/calcom.ts` if the field names differ.
+4. **Vaani:** point the end-of-call webhook at `/api/webhooks/vaani` with the secret. Make a test call, then compare Vaani's real payload against `src/lib/sources/vaani.ts` and `scripts/gen-fixtures.mjs`. These are the only two places that assume the shape. Re-run `npm run gen:fixtures && npm test` after changing them.
+
+## Tests
+
+`npm test` runs 87 checks, including one fake Vaani payload for each of the 20 September phone transcripts (`tests/fixtures/`). They cover outcomes, routing, email completeness, signature checks, retry, and phone matching.
 
 ## Secrets
 

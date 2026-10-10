@@ -1,0 +1,37 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t09",
+  "started_at": "2026-09-10T06:02:00.000Z",
+  "ended_at": "2026-09-10T06:07:52.000Z",
+  "duration_seconds": 352,
+  "from_number": "+919800000009",
+  "transcript_url": "https://example.invalid/transcripts/T09",
+  "recording_url": "https://example.invalid/recordings/T09",
+  "cost": {
+    "currency": "INR",
+    "voice": 15.84,
+    "telephony": 4.22,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000009",
+    "caller_name": "Sheetal Deshpande",
+    "locality": "Viman Nagar",
+    "property_type": "apartment",
+    "scope_summary": "Existing client, 2BHK",
+    "outcome": "complaint",
+    "doubts": "Wants a callback from Nikhil or a senior person",
+    "language": "English",
+    "summary": "Existing client; designer Aryan has not replied in five days. Three messages and two calls unanswered."
+  },
+  "_expect": {
+    "outcome": "complaint",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "note_on_existing",
+      "emails": [
+        "complaint"
+      ]
+    }
+  }
+}

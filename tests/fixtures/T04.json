@@ -1,0 +1,35 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t04",
+  "started_at": "2026-09-04T05:37:00.000Z",
+  "ended_at": "2026-09-04T05:40:22.000Z",
+  "duration_seconds": 202,
+  "from_number": "+919800000004",
+  "transcript_url": "https://example.invalid/transcripts/T04",
+  "recording_url": "https://example.invalid/recordings/T04",
+  "cost": {
+    "currency": "INR",
+    "voice": 9.09,
+    "telephony": 2.42,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000004",
+    "caller_name": null,
+    "locality": null,
+    "property_type": "apartment",
+    "scope_summary": "Ideas on colours and furniture arrangement for a living room",
+    "outcome": "declined",
+    "decline_reason": "advice_only",
+    "language": "English",
+    "summary": "Wants suggestions only, no execution."
+  },
+  "_expect": {
+    "outcome": "declined",
+    "declineReason": "advice_only",
+    "plan": {
+      "hubspot": "contact_only",
+      "emails": []
+    }
+  }
+}

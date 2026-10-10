@@ -1,0 +1,39 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t11",
+  "started_at": "2026-09-12T04:48:00.000Z",
+  "ended_at": "2026-09-12T04:54:22.000Z",
+  "duration_seconds": 382,
+  "from_number": "+919800000011",
+  "transcript_url": "https://example.invalid/transcripts/T11",
+  "recording_url": "https://example.invalid/recordings/T11",
+  "cost": {
+    "currency": "INR",
+    "voice": 17.19,
+    "telephony": 4.58,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000011",
+    "caller_name": null,
+    "locality": "Baner",
+    "property_type": "apartment",
+    "scope_summary": "Living room, bedroom and kitchen of a rented 2BHK. No structural changes",
+    "timeline_text": "No deadline, three-year lease",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Rented flat. Landlord agreed, no wall-breaking",
+    "language": "English",
+    "summary": "Rented 2BHK, reversible work only. Booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

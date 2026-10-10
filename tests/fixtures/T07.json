@@ -1,0 +1,37 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t07",
+  "started_at": "2026-09-08T04:14:00.000Z",
+  "ended_at": "2026-09-08T04:17:15.000Z",
+  "duration_seconds": 195,
+  "from_number": "+919800000007",
+  "transcript_url": "https://example.invalid/transcripts/T07",
+  "recording_url": "https://example.invalid/recordings/T07",
+  "cost": {
+    "currency": "INR",
+    "voice": 8.78,
+    "telephony": 2.34,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000007",
+    "caller_name": null,
+    "locality": null,
+    "property_type": "apartment",
+    "scope_summary": "Living room and kitchen before Diwali",
+    "timeline_text": "Before Diwali, about three weeks away",
+    "outcome": "declined",
+    "decline_reason": "timeline",
+    "doubts": "Offered a November start. Said they would think and call back",
+    "language": "English",
+    "summary": "Needs it in three weeks. Told 8 to 10 weeks minimum. Offered a later start."
+  },
+  "_expect": {
+    "outcome": "declined",
+    "declineReason": "timeline",
+    "plan": {
+      "hubspot": "contact_only",
+      "emails": []
+    }
+  }
+}

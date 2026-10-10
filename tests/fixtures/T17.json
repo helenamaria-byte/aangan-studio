@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t17",
+  "started_at": "2026-09-22T08:46:00.000Z",
+  "ended_at": "2026-09-22T08:50:30.000Z",
+  "duration_seconds": 270,
+  "from_number": "+919800000017",
+  "transcript_url": "https://example.invalid/transcripts/T17",
+  "recording_url": "https://example.invalid/recordings/T17",
+  "cost": {
+    "currency": "INR",
+    "voice": 12.15,
+    "telephony": 3.24,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000017",
+    "caller_name": "Ritu Kapoor",
+    "locality": "Pimple Saudagar",
+    "property_type": "apartment",
+    "size_sqft": 1050,
+    "scope_summary": "Kitchen, wardrobes, living room in a 3BHK",
+    "timeline_text": "Done by March",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Called back after the line dropped two minutes earlier",
+    "language": "English",
+    "summary": "Second call after a disconnection. Booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

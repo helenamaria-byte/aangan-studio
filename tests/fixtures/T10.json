@@ -1,0 +1,37 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t10",
+  "started_at": "2026-09-11T08:34:00.000Z",
+  "ended_at": "2026-09-11T08:37:40.000Z",
+  "duration_seconds": 220,
+  "from_number": "+919800000010",
+  "transcript_url": "https://example.invalid/transcripts/T10",
+  "recording_url": "https://example.invalid/recordings/T10",
+  "cost": {
+    "currency": "INR",
+    "voice": 9.9,
+    "telephony": 2.64,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000010",
+    "caller_name": null,
+    "locality": "Kharadi",
+    "property_type": "apartment",
+    "size_sqft": 550,
+    "scope_summary": "Kitchen and one bedroom in a 1BHK",
+    "budget_mentioned": "1 to 1.5 lakh maximum for everything",
+    "outcome": "declined",
+    "decline_reason": "budget",
+    "language": "English",
+    "summary": "Volunteered a budget well below what the scope needs. Told gently."
+  },
+  "_expect": {
+    "outcome": "declined",
+    "declineReason": "budget",
+    "plan": {
+      "hubspot": "contact_only",
+      "emails": []
+    }
+  }
+}

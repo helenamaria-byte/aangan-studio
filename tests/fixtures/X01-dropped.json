@@ -1,0 +1,30 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-x01-dropped",
+  "started_at": "2026-09-22T08:44:00.000Z",
+  "ended_at": "2026-09-22T08:44:40.000Z",
+  "duration_seconds": 40,
+  "from_number": "+919800000099",
+  "transcript_url": "https://example.invalid/transcripts/X01-dropped",
+  "recording_url": "https://example.invalid/recordings/X01-dropped",
+  "cost": {
+    "currency": "INR",
+    "voice": 1.8,
+    "telephony": 0.48,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000099",
+    "outcome": "dropped",
+    "summary": "Line dropped after the greeting."
+  },
+  "_expect": {
+    "outcome": "dropped",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "none",
+      "emails": []
+    },
+    "callback": true
+  }
+}

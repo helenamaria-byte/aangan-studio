@@ -1,0 +1,41 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t13",
+  "started_at": "2026-09-16T06:49:00.000Z",
+  "ended_at": "2026-09-16T06:55:08.000Z",
+  "duration_seconds": 368,
+  "from_number": "+919800000013",
+  "transcript_url": "https://example.invalid/transcripts/T13",
+  "recording_url": "https://example.invalid/recordings/T13",
+  "cost": {
+    "currency": "INR",
+    "voice": 16.56,
+    "telephony": 4.42,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000013",
+    "caller_name": null,
+    "locality": "Aundh",
+    "property_type": "apartment",
+    "size_sqft": 1100,
+    "scope_summary": "Kitchen, wardrobes in both bedrooms, living room in a 3BHK",
+    "timeline_text": null,
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Pushed hard for a price range. None given",
+    "language": "English",
+    "summary": "Insisted on a rough range, accepted the consultation."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    },
+    "priceDeflected": true
+  }
+}

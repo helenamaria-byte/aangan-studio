@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t15",
+  "started_at": "2026-09-18T09:42:00.000Z",
+  "ended_at": "2026-09-18T09:47:44.000Z",
+  "duration_seconds": 344,
+  "from_number": "+919800000015",
+  "transcript_url": "https://example.invalid/transcripts/T15",
+  "recording_url": "https://example.invalid/recordings/T15",
+  "cost": {
+    "currency": "INR",
+    "voice": 15.48,
+    "telephony": 4.13,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000015",
+    "caller_name": "Smita",
+    "locality": "Undri",
+    "property_type": "apartment",
+    "size_sqft": 875,
+    "scope_summary": "Full home: kitchen, wardrobes, living room",
+    "timeline_text": "Possession in about six weeks, wants to start design now",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Husband agreed. Builder will allow site access now",
+    "language": "English",
+    "summary": "Possession in six weeks, enough lead time. Booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

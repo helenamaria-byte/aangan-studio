@@ -1,0 +1,29 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-x02-spam",
+  "started_at": "2026-09-22T09:30:00.000Z",
+  "ended_at": "2026-09-22T09:30:25.000Z",
+  "duration_seconds": 25,
+  "from_number": "+919800000098",
+  "transcript_url": "https://example.invalid/transcripts/X02-spam",
+  "recording_url": "https://example.invalid/recordings/X02-spam",
+  "cost": {
+    "currency": "INR",
+    "voice": 1.13,
+    "telephony": 0.3,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000098",
+    "outcome": "spam_or_wrong_number",
+    "summary": "Sales call."
+  },
+  "_expect": {
+    "outcome": "spam_or_wrong_number",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "none",
+      "emails": []
+    }
+  }
+}

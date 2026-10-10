@@ -1,0 +1,35 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t03",
+  "started_at": "2026-09-03T10:45:00.000Z",
+  "ended_at": "2026-09-03T10:47:40.000Z",
+  "duration_seconds": 160,
+  "from_number": "+919800000003",
+  "transcript_url": "https://example.invalid/transcripts/T03",
+  "recording_url": "https://example.invalid/recordings/T03",
+  "cost": {
+    "currency": "INR",
+    "voice": 7.2,
+    "telephony": 1.92,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000003",
+    "caller_name": "Suresh Patil",
+    "locality": "Nashik",
+    "property_type": "house",
+    "scope_summary": "Home office and study",
+    "outcome": "declined",
+    "decline_reason": "out_of_area",
+    "language": "English",
+    "summary": "Site is in Nashik, outside Pune and PCMC."
+  },
+  "_expect": {
+    "outcome": "declined",
+    "declineReason": "out_of_area",
+    "plan": {
+      "hubspot": "contact_only",
+      "emails": []
+    }
+  }
+}

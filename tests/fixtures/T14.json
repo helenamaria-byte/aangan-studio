@@ -1,0 +1,39 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t14",
+  "started_at": "2026-09-17T06:11:00.000Z",
+  "ended_at": "2026-09-17T06:15:55.000Z",
+  "duration_seconds": 295,
+  "from_number": "+919800000014",
+  "transcript_url": "https://example.invalid/transcripts/T14",
+  "recording_url": "https://example.invalid/recordings/T14",
+  "cost": {
+    "currency": "INR",
+    "voice": 13.28,
+    "telephony": 3.54,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000014",
+    "caller_name": null,
+    "locality": "Hadapsar",
+    "property_type": "apartment",
+    "scope_summary": "Full design of parents' new 3BHK",
+    "timeline_text": null,
+    "decision_maker": "represented",
+    "outcome": "qualified_booked",
+    "doubts": "Caller is the son doing the first check. Parents decide and will attend the consultation",
+    "language": "English",
+    "summary": "Son calling for his parents. Parents to attend."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

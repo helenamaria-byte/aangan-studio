@@ -1,0 +1,38 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t08",
+  "started_at": "2026-09-09T17:17:00.000Z",
+  "ended_at": "2026-09-09T17:19:20.000Z",
+  "duration_seconds": 140,
+  "from_number": "+919800000008",
+  "transcript_url": "https://example.invalid/transcripts/T08",
+  "recording_url": "https://example.invalid/recordings/T08",
+  "cost": {
+    "currency": "INR",
+    "voice": 6.3,
+    "telephony": 1.68,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000008",
+    "caller_name": null,
+    "locality": "Nanded City",
+    "property_type": null,
+    "scope_summary": null,
+    "outcome": "qualified_no_booking",
+    "doubts": "Nanded City is not on the confirmed service-area list. Team to confirm and call back",
+    "language": "English",
+    "summary": "After-hours call, answered. Area unconfirmed, so no booking made."
+  },
+  "_expect": {
+    "outcome": "qualified_no_booking",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:new",
+      "emails": [
+        "front_desk"
+      ]
+    },
+    "afterHours": true
+  }
+}

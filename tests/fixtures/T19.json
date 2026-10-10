@@ -1,0 +1,35 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t19",
+  "started_at": "2026-09-24T10:32:00.000Z",
+  "ended_at": "2026-09-24T10:34:50.000Z",
+  "duration_seconds": 170,
+  "from_number": "+919800000019",
+  "transcript_url": "https://example.invalid/transcripts/T19",
+  "recording_url": "https://example.invalid/recordings/T19",
+  "cost": {
+    "currency": "INR",
+    "voice": 7.65,
+    "telephony": 2.04,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000019",
+    "caller_name": null,
+    "locality": "Koregaon Park",
+    "property_type": "other",
+    "scope_summary": "Restaurant interiors",
+    "outcome": "declined",
+    "decline_reason": "out_of_scope_type",
+    "language": "English",
+    "summary": "Restaurants are outside the studio's scope."
+  },
+  "_expect": {
+    "outcome": "declined",
+    "declineReason": "out_of_scope_type",
+    "plan": {
+      "hubspot": "contact_only",
+      "emails": []
+    }
+  }
+}

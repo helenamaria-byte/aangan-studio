@@ -56,6 +56,12 @@ export const bookings = pgTable("bookings", {
   callId: integer("call_id").references(() => calls.id),
   designerId: integer("designer_id").references(() => designers.id),
   startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  // Cal.com's webhook arrives during the call, before Vaani's end-of-call webhook, so the
+  // booking is matched to its call later by this phone number.
+  attendeePhone: text("attendee_phone"),
+  attendeeName: text("attendee_name"),
+  locationType: text("location_type"), // site | studio
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   // booked | rescheduled | cancelled | completed
   status: text("status").notNull().default("booked"),
 });

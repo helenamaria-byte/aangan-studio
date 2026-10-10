@@ -4,6 +4,10 @@ CREATE TABLE IF NOT EXISTS "bookings" (
 	"call_id" integer,
 	"designer_id" integer,
 	"starts_at" timestamp with time zone NOT NULL,
+	"attendee_phone" text,
+	"attendee_name" text,
+	"location_type" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"status" text DEFAULT 'booked' NOT NULL,
 	CONSTRAINT "bookings_calcom_booking_id_unique" UNIQUE("calcom_booking_id")
 );

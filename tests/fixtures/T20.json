@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t20",
+  "started_at": "2026-09-25T03:45:00.000Z",
+  "ended_at": "2026-09-25T03:49:44.000Z",
+  "duration_seconds": 284,
+  "from_number": "+919800000020",
+  "transcript_url": "https://example.invalid/transcripts/T20",
+  "recording_url": "https://example.invalid/recordings/T20",
+  "cost": {
+    "currency": "INR",
+    "voice": 12.78,
+    "telephony": 3.41,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000020",
+    "caller_name": "Pooja",
+    "locality": "Magarpatta, Cybercity",
+    "property_type": "apartment",
+    "size_sqft": 900,
+    "scope_summary": "Kitchen, both bedrooms, living room of a 2BHK",
+    "timeline_text": "January start for execution",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Husband will attend",
+    "language": "English",
+    "summary": "2BHK, flexible timeline. Booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

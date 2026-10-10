@@ -1,0 +1,36 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t18",
+  "started_at": "2026-09-23T06:25:00.000Z",
+  "ended_at": "2026-09-23T06:28:02.000Z",
+  "duration_seconds": 182,
+  "from_number": "+919800000018",
+  "transcript_url": "https://example.invalid/transcripts/T18",
+  "recording_url": "https://example.invalid/recordings/T18",
+  "cost": {
+    "currency": "INR",
+    "voice": 8.19,
+    "telephony": 2.18,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000018",
+    "caller_name": null,
+    "locality": null,
+    "property_type": "office",
+    "size_sqft": 180,
+    "scope_summary": "180 sq ft coworking pod: lighting, desk, storage",
+    "outcome": "declined",
+    "decline_reason": "too_small",
+    "language": "English",
+    "summary": "Commercial space far below the minimum scope."
+  },
+  "_expect": {
+    "outcome": "declined",
+    "declineReason": "too_small",
+    "plan": {
+      "hubspot": "contact_only",
+      "emails": []
+    }
+  }
+}

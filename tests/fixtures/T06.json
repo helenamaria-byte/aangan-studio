@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t06",
+  "started_at": "2026-09-05T09:58:00.000Z",
+  "ended_at": "2026-09-05T10:03:01.000Z",
+  "duration_seconds": 301,
+  "from_number": "+919800000006",
+  "transcript_url": "https://example.invalid/transcripts/T06",
+  "recording_url": "https://example.invalid/recordings/T06",
+  "cost": {
+    "currency": "INR",
+    "voice": 13.55,
+    "telephony": 3.61,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000006",
+    "caller_name": null,
+    "locality": "Baner",
+    "property_type": "office",
+    "size_sqft": 800,
+    "scope_summary": "Bare-shell office fitout: 20 workstations, a cabin, a meeting room, a break area",
+    "timeline_text": "Operational by December",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Caller is the founder",
+    "language": "English",
+    "summary": "Startup's first office, bare shell. Booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    }
+  }
+}

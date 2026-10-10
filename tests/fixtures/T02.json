@@ -1,0 +1,41 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t02",
+  "started_at": "2026-09-03T09:11:00.000Z",
+  "ended_at": "2026-09-03T09:16:08.000Z",
+  "duration_seconds": 308,
+  "from_number": "+919800000002",
+  "transcript_url": "https://example.invalid/transcripts/T02",
+  "recording_url": "https://example.invalid/recordings/T02",
+  "cost": {
+    "currency": "INR",
+    "voice": 13.86,
+    "telephony": 3.7,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000002",
+    "caller_name": null,
+    "locality": "Wakad",
+    "property_type": "apartment",
+    "size_sqft": 950,
+    "scope_summary": "Full redesign: modular kitchen, wardrobes, living room, both bedrooms",
+    "timeline_text": "Moving in November, design from October",
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Pushed twice for a price range. None given",
+    "language": "English",
+    "summary": "Asked for a ballpark twice and was deflected. Booked."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    },
+    "priceDeflected": true
+  }
+}

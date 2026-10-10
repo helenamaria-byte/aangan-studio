@@ -1,0 +1,40 @@
+{
+  "event": "call.ended",
+  "call_id": "fx-t16",
+  "started_at": "2026-09-19T05:08:00.000Z",
+  "ended_at": "2026-09-19T05:13:18.000Z",
+  "duration_seconds": 318,
+  "from_number": "+919800000016",
+  "transcript_url": "https://example.invalid/transcripts/T16",
+  "recording_url": "https://example.invalid/recordings/T16",
+  "cost": {
+    "currency": "INR",
+    "voice": 14.31,
+    "telephony": 3.82,
+    "llm": 0.8
+  },
+  "analysis": {
+    "caller_phone": "+919800000016",
+    "caller_name": "Girish Nair",
+    "locality": "Viman Nagar",
+    "property_type": "apartment",
+    "scope_summary": "3BHK",
+    "timeline_text": null,
+    "decision_maker": "yes",
+    "outcome": "qualified_booked",
+    "doubts": "Repeat caller. Called Monday, no follow-up. Frustrated",
+    "language": "English",
+    "summary": "Earlier enquiry was lost. Re-taken and booked on this call."
+  },
+  "_expect": {
+    "outcome": "qualified_booked",
+    "declineReason": null,
+    "plan": {
+      "hubspot": "deal:booked",
+      "emails": [
+        "handoff"
+      ]
+    },
+    "repeatCaller": true
+  }
+}
