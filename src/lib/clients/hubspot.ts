@@ -43,7 +43,28 @@ const isMissingProperty = (err: unknown) =>
  * If the custom decline-reason property has not been created in HubSpot yet, the contact is saved without it
  * (the reason is also written as a note by the caller), so a missing property never loses a lead.
  */
-export async function upsertContact(c: ContactInput): Promise<string> {
+export async function upsertContact(c: ContactInput, knownContactId?: string | null): Promise<string> {
+  // HubSpot's search is eventually consistent: a contact created seconds ago may not be found yet.
+  // If our own records already know this caller's contact, update it directly and never search.
+  if (knownContactId) {
+    const patch = (withReason: boolean) =>
+      hs(`/crm/v3/objects/contacts/${knownContactId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ properties: contactProps(withReason ? c : { ...c, declineReason: null }) }),
+      });
+    try {
+      try {
+        await patch(true);
+      } catch (err) {
+        if (c.declineReason && isMissingProperty(err)) await patch(false);
+        else throw err;
+      }
+      return knownContactId;
+    } catch (err) {
+      // The contact was deleted or merged in HubSpot: fall through to search or create.
+      if (!(err instanceof Error && /HubSpot 404/.test(err.message))) throw err;
+    }
+  }
   try {
     return await upsertContactOnce(c);
   } catch (err) {

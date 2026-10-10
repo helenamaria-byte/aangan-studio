@@ -159,6 +159,17 @@ describe("Vaani webhook pipeline", () => {
     expect(sent.some((s) => s.url.endsWith("/objects/contacts/contact-existing") && s.method === "PATCH")).toBe(true);
   });
 
+  it("a repeat caller reuses the contact we already made, even when HubSpot search is lagging (empty)", async () => {
+    const db = await getDb();
+    // existingContact stays null, so every HubSpot search returns nothing, like a search index that has not caught up.
+    await ingestVaaniCall(db, fixture("T03", { call_id: "first-call" }));
+    await ingestVaaniCall(db, fixture("T03", { call_id: "second-call", started_at: new Date(Date.now() - 60_000).toISOString() }));
+    const creates = sent.filter((s) => s.url.endsWith("/objects/contacts") && s.method === "POST");
+    expect(creates).toHaveLength(1);
+    const rows = await db.select().from(calls);
+    expect(new Set(rows.map((r) => r.hubspotContactId)).size).toBe(1);
+  });
+
   it("qualified with no booking: deal at 'new', and the front desk is emailed", async () => {
     const db = await getDb();
     await ingestVaaniCall(db, fixture("X03-no-booking"));

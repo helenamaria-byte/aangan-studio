@@ -159,6 +159,7 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
 
   // A dropped call that rings back within 10 minutes no longer needs a callback.
   let repeatOfCallId: number | null = null;
+  let knownContactId: string | null = null; // a HubSpot contact we already created for this phone number
   if (key) {
     const recent = await db
       .select()
@@ -168,6 +169,7 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
     for (const prior of recent) {
       if (prior.id === callId || phoneKey(prior.callerPhone) !== key) continue;
       repeatOfCallId ??= prior.id;
+      knownContactId ??= prior.hubspotContactId;
       const gapMs = e.startedAt.getTime() - prior.startedAt.getTime();
       if (prior.outcome === "dropped" && prior.needsAttention && gapMs <= 10 * 60_000) {
         await db.update(calls).set({ needsAttention: false, handledAt: new Date(), errorText: null }).where(eq(calls.id, prior.id));
@@ -196,7 +198,7 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
   const h = plan.hubspot;
   if (h.kind === "deal") {
     contactId ??= await failures.run("HubSpot contact", () =>
-      hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality }),
+      hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality }, knownContactId),
     );
     if (contactId && !dealId) {
       const cid = contactId;
@@ -210,7 +212,7 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
     }
   } else if (h.kind === "contact_only") {
     contactId = await failures.run("HubSpot contact", () =>
-      hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality, declineReason: h.declineReason }),
+      hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality, declineReason: h.declineReason }, knownContactId),
     );
     // Always record the reason as a note too, so it is visible even if the custom property does not exist yet.
     if (contactId) {
