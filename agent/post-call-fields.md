@@ -5,7 +5,7 @@ Configure these as **entity extraction** fields in Vaani (Agent Config, Analysis
 | Field | Type | Allowed values / notes |
 |---|---|---|
 | caller_name | text | |
-| caller_phone | text | Confirmed with the caller; caller ID if not |
+| caller_phone | text | Asked for and confirmed on the call. Web calls have no caller ID |
 | locality | text | Pune or PCMC locality |
 | property_type | enum | apartment, house, villa, office, clinic, other |
 | size_sqft | number | Carpet area. Null if unknown |
