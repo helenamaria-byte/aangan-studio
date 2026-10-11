@@ -264,15 +264,59 @@ describe("Vaani's real call_postprocessing event", () => {
     expect(sent.find((s) => s.url.endsWith("/objects/contacts") && s.method === "POST")).toBeTruthy();
   });
 
-  it("flags a call that has no phone number anywhere, and says how to fix it, but still saves it", async () => {
+  it("flags a LEAD that has no phone number anywhere, and says how to fix it, but still saves it", async () => {
     const db = await getDb();
     const payload = doc();
-    delete (payload.data.entities as Record<string, unknown>).caller_phone;
+    const ent = payload.data.entities as Record<string, unknown>;
+    delete ent.caller_phone;
+    ent.outcome = "qualified_no_booking";
+    delete ent.decline_reason;
     await ingestVaaniCall(db, payload);
     const [row] = await db.select().from(calls);
-    expect(row.outcome).toBe("declined");
+    expect(row.outcome).toBe("qualified_no_booking");
     expect(row.needsAttention).toBe(true);
     expect(row.errorText).toMatch(/No caller phone number.*VAANI_API_KEY/);
+  });
+
+  it("does NOT flag a declined or dropped call for lacking a number, and creates no empty HubSpot contact", async () => {
+    const db = await getDb();
+    // a decline with no number
+    const declinedPayload = doc({ call_id: "no-phone-declined" });
+    declinedPayload.data.call_id = "no-phone-declined"; // Vaani repeats the id inside data
+    await ingestVaaniCall(db, declinedPayload);
+    // a dropped call where nobody spoke
+    await ingestVaaniCall(db, {
+      event: "call_postprocessing",
+      call_id: "silent-1",
+      timestamp: new Date().toISOString(),
+      data: { call_duration: 25.4, entities: { outcome: "dropped" }, summary: "Nobody spoke." },
+    });
+    const rows = await db.select().from(calls);
+    const declined = rows.find((r) => r.vaaniCallId === "no-phone-declined")!;
+    expect(declined.errorText).toBeNull();
+    expect(declined.hubspotContactId).toBeNull();
+    expect(sent.some((s) => s.url.endsWith("/objects/contacts") && s.method === "POST")).toBe(false);
+    const dropped = rows.find((r) => r.vaaniCallId === "silent-1")!;
+    expect(dropped.errorText).toBe("Needs callback"); // the normal short-call rule, not a missing-number complaint
+    expect(dropped.durationSec).toBe(25);
+  });
+
+  it("with no front desk address set, a lead's note goes to the owner instead of failing", async () => {
+    const db = await getDb();
+    const saved = process.env.FRONT_DESK_EMAIL;
+    delete process.env.FRONT_DESK_EMAIL;
+    try {
+      const payload = doc();
+      const ent = payload.data.entities as Record<string, unknown>;
+      ent.outcome = "qualified_no_booking";
+      delete ent.decline_reason;
+      ent.caller_phone = "+919833335555";
+      await ingestVaaniCall(db, payload);
+      expect(recipients()).toEqual(["nikhil@example.test"]);
+      expect((await db.select().from(calls))[0].errorText).toBe("Qualified lead with no booking yet");
+    } finally {
+      process.env.FRONT_DESK_EMAIL = saved;
+    }
   });
 
   it("if call history is down, the call is still saved with its spoken phone number and flagged", async () => {

@@ -133,7 +133,9 @@ export async function ingestVaaniCall(db: Db, raw: unknown): Promise<VaaniResult
       problems.push(`Vaani call history: ${errorMessage(err)}`);
     }
   }
-  if (!enquiry.callerPhone) {
+  // A missing number only matters when someone has to follow up: a lead, a booking or a complaint.
+  const needsPhone = enquiry.outcome === "qualified_booked" || enquiry.outcome === "qualified_no_booking" || enquiry.outcome === "complaint";
+  if (!enquiry.callerPhone && needsPhone) {
     problems.push(
       "No caller phone number for this call, so it cannot be matched to a booking or a CRM contact" +
         (apiKey ? "" : ". Set VAANI_API_KEY so the number can be read from Vaani's call history"),
@@ -231,6 +233,8 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
         await failures.run("HubSpot note", () => hubspot.addNote("deals", did, noteText(e)));
       }
     }
+  } else if (h.kind === "contact_only" && !e.callerPhone) {
+    // A declined caller who gave no number cannot be told apart from anyone else: do not create an empty contact.
   } else if (h.kind === "contact_only") {
     contactId = await failures.run("HubSpot contact", () =>
       hubspot.upsertContact({ name: e.callerName, phone: e.callerPhone, locality: e.locality, declineReason: h.declineReason }, knownContactId),
@@ -255,7 +259,7 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
 
   // 3. Emails
   if (plan.emails.includes("front_desk")) {
-    const to = settings.frontDeskEmail;
+    const to = settings.frontDeskEmail ?? settings.ownerEmail; // until a front desk address is set, the owner gets it
     const mail = buildFrontDeskEmail(e, dealId ? hubspot.dealUrl(dealId) : null);
     await failures.run("Front desk email", async () => {
       if (!to) throw new Error("No front desk email is set (FRONT_DESK_EMAIL or Settings)");

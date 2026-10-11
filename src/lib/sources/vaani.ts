@@ -128,6 +128,24 @@ function analysisBag(p: Obj): Obj {
   return bag;
 }
 
+/**
+ * Vaani's extraction returns free text for decline_reason even when told to pick from a list
+ * (a real call returned a sentence about Nashik). Accept the exact code, otherwise read the sentence.
+ */
+export function normalizeDeclineReason(v: unknown): DeclineReason | null {
+  const exact = pick(v, DECLINE);
+  if (exact) return exact;
+  const t = str(v)?.toLowerCase();
+  if (!t) return null;
+  if (/restaurant|hotel|retail|shop|gym|hospitality|structural|architect|vastu|furniture only|out of scope/.test(t)) return "out_of_scope_type";
+  if (/nashik|mumbai|outside (the )?(pune|service|our)|out of (the )?(service )?area|not in pune|other city|beyond (pune|pcmc)/.test(t)) return "out_of_area";
+  if (/advice|ideas|suggestion|styling|decor|consultation only|just looking/.test(t)) return "advice_only";
+  if (/timeline|too soon|short notice|urgent|deadline|weeks?/.test(t)) return "timeline";
+  if (/budget|too low|afford|too little/.test(t)) return "budget";
+  if (/too small|minimum|below (our )?(minimum|scope)|small(er)? (space|project)/.test(t)) return "too_small";
+  return "other";
+}
+
 export interface AdapterOptions {
   usdToInr: number;
   /** Rupees per Vaani credit (Vaani reports call cost in credits). */
@@ -141,10 +159,15 @@ export function parseVaaniPayload(raw: unknown, opts: AdapterOptions): Enquiry {
 
   const sourceId = str(get(p, KEYS.id));
   if (!sourceId) throw new Error("Vaani payload has no call id (looked for call_id, id, call_uuid and similar)");
-  // Duration. Vaani's call_postprocessing event reports call_duration in MILLISECONDS; other events use seconds.
-  const isPostProcessing = str(p.event) === "call_postprocessing";
-  const msRaw = num(get(p, KEYS.durationMs)) ?? (isPostProcessing ? num(p.call_duration) : null);
-  let durationSec: number | null = msRaw !== null ? Math.round(msRaw / 1000) : num(get(p, KEYS.duration));
+  // Duration. Vaani's documentation says call_postprocessing reports call_duration in milliseconds, but real calls
+  // report SECONDS (a 63-second call arrived as 63.36). So: a duration_ms field is milliseconds; for call_duration,
+  // anything under 10,000 is seconds (up to 2.7 hours) and anything larger is milliseconds.
+  const msField = num(get(p, KEYS.durationMs));
+  const callDuration = num(p.call_duration);
+  let durationSec: number | null;
+  if (msField !== null) durationSec = Math.round(msField / 1000);
+  else if (callDuration !== null && str(p.event) === "call_postprocessing") durationSec = Math.round(callDuration >= 10_000 ? callDuration / 1000 : callDuration);
+  else durationSec = num(get(p, KEYS.duration));
 
   // Times. With no start time, the event's own timestamp is treated as the end of the call, and the start is
   // worked out from the duration.
@@ -193,7 +216,7 @@ export function parseVaaniPayload(raw: unknown, opts: AdapterOptions): Enquiry {
     decisionMaker,
     budgetMentioned: str(a.budget_mentioned),
     outcome: pick(a.outcome, OUTCOMES),
-    declineReason: pick(a.decline_reason, DECLINE),
+    declineReason: normalizeDeclineReason(a.decline_reason),
     doubts: str(a.doubts),
     language: str(a.language),
     summary: str(a.summary) ?? str(p.summary) ?? str(p.call_summary),

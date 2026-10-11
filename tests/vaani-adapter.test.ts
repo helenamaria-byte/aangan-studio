@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseVaaniPayload } from "../src/lib/sources/vaani";
+import { normalizeDeclineReason, parseVaaniPayload } from "../src/lib/sources/vaani";
 
 const opts = { usdToInr: 85 };
 const analysis = {
@@ -60,6 +60,73 @@ describe("Vaani's documented call_postprocessing event (docs.vaanivoice.ai/guide
       expect(shouldProcessEvent({ event: ev, room_name: "r" }), ev).toBe(false);
     }
     expect(shouldProcessEvent({ call_id: "no-event-field" })).toBe(true); // an unknown format is never silently dropped
+  });
+});
+
+describe("what real web calls actually sent", () => {
+  const real = (over: Record<string, unknown> = {}) => ({
+    event: "call_postprocessing",
+    call_id: "webrtc-1791740090-1093f2b0",
+    timestamp: "2026-10-11T17:36:03.000Z",
+    data: {
+      call_id: "webrtc-1791740090-1093f2b0",
+      call_duration: 63.36, // SECONDS, although the documentation says milliseconds
+      end_reason: "AGENT_REQUESTED_DISCONNECT",
+      summary: "The caller asked about an office in Baner, then said Nashik.",
+      entities: {
+        outcome: "declined",
+        locality: "Baner",
+        property_type: "office",
+        size_sqft: 1000,
+        caller_name: null,
+        caller_phone: null,
+        decision_maker: "unclear",
+        decline_reason: "The caller's site is in Nashik, which is outside the Pune and PCMC service area.",
+      },
+      dispositions: null,
+      recording_url: "https://api.vaanivoice.ai/api/stream/webrtc-1791740090-1093f2b0",
+      transcript: "AGENT: hi",
+    },
+    ...over,
+  });
+
+  it("reads a duration reported in seconds (63.36) as 63 seconds, not 0", () => {
+    const e = parseVaaniPayload(real(), opts);
+    expect(e.durationSec).toBe(63);
+    expect(e.endedAt!.toISOString()).toBe("2026-10-11T17:36:03.000Z");
+    expect(e.startedAt.toISOString()).toBe("2026-10-11T17:35:00.000Z"); // 63 seconds earlier
+  });
+
+  it("still reads a duration reported in milliseconds, as the documentation says", () => {
+    const p = real();
+    (p.data as Record<string, unknown>).call_duration = 63360;
+    expect(parseVaaniPayload(p, opts).durationSec).toBe(63);
+  });
+
+  it("turns a decline reason written as a sentence into one of the fixed reasons", () => {
+    expect(parseVaaniPayload(real(), opts).declineReason).toBe("out_of_area");
+  });
+
+  it.each([
+    ["out_of_area", "out_of_area"],
+    ["The caller wants a restaurant designed, which the studio does not do.", "out_of_scope_type"],
+    ["Wants colour ideas and advice only, no execution.", "advice_only"],
+    ["Needs it done in three weeks, which is too soon.", "timeline"],
+    ["The budget mentioned is far too low.", "budget"],
+    ["The space is too small for the studio.", "too_small"],
+    ["Something unusual", "other"],
+  ])("decline reason %j reads as %s", (text, expected) => {
+    expect(normalizeDeclineReason(text)).toBe(expected);
+  });
+
+  it("does not mistake 'weekend' or 'workshop' for a timeline or a shop", () => {
+    expect(normalizeDeclineReason("Calls only on the weekend")).toBe("other");
+    expect(normalizeDeclineReason("A woodworking workshop")).toBe("other");
+  });
+
+  it("no decline reason stays empty", () => {
+    expect(normalizeDeclineReason(null)).toBeNull();
+    expect(normalizeDeclineReason("")).toBeNull();
   });
 });
 
