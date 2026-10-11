@@ -14,7 +14,8 @@
     "gen:fixtures": "node scripts/gen-fixtures.mjs",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "check:leak": "node scripts/check-pricing-leak.mjs",
-    "vaani:pack": "node scripts/build-vaani-pack.mjs"
+    "vaani:pack": "node scripts/build-vaani-pack.mjs",
+    "vaani:sync": "node scripts/sync-vaani.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.17",
