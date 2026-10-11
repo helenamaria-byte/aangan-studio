@@ -21,6 +21,12 @@ describe("what the sync sends to Vaani", () => {
     for (const k of knowledgeFiles() as { text: string }[]) expect(k.text).not.toMatch(/TODO/);
   });
 
+  it("never points the agent at files or tools it cannot see", () => {
+    expect(prompt).not.toMatch(/tools\.md|system-prompt\.md|post-call-fields|\.md/);
+    expect(prompt).not.toMatch(/\(0\d-[a-z-]+\)/); // no "(01-service-area)" style file labels
+    expect(prompt).toMatch(/"Service area" in the studio facts/);
+  });
+
   it("includes the studio facts, so the agent knows its services and service area without a knowledge base", () => {
     expect(prompt).toContain("Studio facts");
     expect(prompt).toMatch(/Pimple Saudagar/);
