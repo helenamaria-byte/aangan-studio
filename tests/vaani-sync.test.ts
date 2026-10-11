@@ -34,6 +34,12 @@ describe("what the sync sends to Vaani", () => {
     expect(prompt).toMatch(/Ask whether they prefer a visit to the site or a visit to the studio/);
   });
 
+  it("names the booking tools and always passes the caller's number to them", () => {
+    expect(prompt).toMatch(/Check_availability_booking/);
+    expect(prompt).toMatch(/book_appointment/);
+    expect(prompt).toMatch(/name and mobile number/);
+  });
+
   it("includes the studio facts, so the agent knows its services and service area without a knowledge base", () => {
     expect(prompt).toContain("Studio facts");
     expect(prompt).toMatch(/Pimple Saudagar/);
