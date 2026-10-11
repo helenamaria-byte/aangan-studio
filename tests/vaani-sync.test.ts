@@ -27,6 +27,13 @@ describe("what the sync sends to Vaani", () => {
     expect(prompt).toMatch(/"Service area" in the studio facts/);
   });
 
+  it("never lets the agent invent availability, and never offers a Sunday", () => {
+    expect(prompt).toMatch(/taken ONLY from what the booking tool returns/);
+    expect(prompt).toMatch(/Never invent a day or a time/);
+    expect(prompt).toMatch(/Never offer a Sunday/);
+    expect(prompt).toMatch(/Ask whether they prefer a visit to the site or a visit to the studio/);
+  });
+
   it("includes the studio facts, so the agent knows its services and service area without a knowledge base", () => {
     expect(prompt).toContain("Studio facts");
     expect(prompt).toMatch(/Pimple Saudagar/);
