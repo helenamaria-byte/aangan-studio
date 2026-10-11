@@ -127,6 +127,12 @@ writeFileSync(
 
 Do these in order. Each file in this folder is one paste or one upload.
 
+FASTEST ROUTE: import 5-agent-import.json
+   Design > Agents > "+ New Agent" > "Import from JSON". Paste or upload that file. It creates an agent with the system
+   prompt and all 14 extraction fields already filled in. Then you only need steps 3 to 5 and 7 to 10 below,
+   plus choosing a working LLM provider for the new agent (Vaani's default may be disabled) and saving.
+   If the import is rejected, use the step-by-step route below instead.
+
 1. CREATE THE AGENT
    Design > Agents > "+ New Agent" > "Build from Scratch". Name it "Aangan Studio front desk".
    Pick a voice in Voice Lab that suits Indian English. If there is a language option, choose English with Hindi and Marathi.
@@ -166,6 +172,44 @@ Do these in order. Each file in this folder is one paste or one upload.
    The 20 scenarios and the pricing-pressure calls are in tests/agent-test-log.md.
 `,
 );
+
+// 6. One-file import (Vaani: Design > Agents > New Agent > Import from JSON).
+// Built from Vaani's documented agent structure (docs.vaanivoice.ai/api-reference/create-agent and update-analysis).
+// Data point names are limited to 30 characters. It creates a NEW agent with the prompt and all 14 fields ready.
+const OUTCOMES = ["qualified_booked", "qualified_no_booking", "declined", "complaint", "dropped", "spam_or_wrong_number"];
+const dataPoints = [
+  { name: "caller_name", prompt: "The caller's full name as they gave it. Null if not given.", nullable: true },
+  { name: "caller_phone", prompt: "The caller's mobile number as confirmed aloud, with country code, for example +919812345678. Null if not given.", nullable: true },
+  { name: "locality", prompt: "The Pune or PCMC area where the site is, for example Kothrud or Pimple Saudagar.", nullable: true },
+  { name: "property_type", prompt: "The type of property.", values: ["apartment", "house", "villa", "office", "clinic", "other"], nullable: true },
+  { name: "size_sqft", prompt: "The carpet area in square feet, as a plain number with no units. Null if the caller does not know.", nullable: true },
+  { name: "scope_summary", prompt: "What they want done, in one or two short lines, for example 'Kitchen, wardrobes and living room of a 3BHK'.", nullable: true },
+  { name: "timeline_text", prompt: "When they want the work finished or started, in the caller's own words.", nullable: true },
+  { name: "decision_maker", prompt: "yes if the caller decides; represented if the caller is calling for someone who decides; unclear otherwise.", values: ["yes", "represented", "unclear"], nullable: true },
+  { name: "budget_mentioned", prompt: "Only if the caller said a budget figure themselves, copy it as they said it. The agent never asks. Null otherwise.", nullable: true },
+  {
+    name: "outcome",
+    prompt:
+      "qualified_booked: a consultation was actually booked in Cal.com during the call. qualified_no_booking: a good lead but no booking was made. declined: the studio politely declined (not a fit). complaint: an existing client with a problem (never a lead). dropped: the call ended before enough was collected. spam_or_wrong_number: a sales call or wrong number. Use qualified_booked only if a booking was really created.",
+    values: OUTCOMES,
+    nullable: false,
+  },
+  { name: "decline_reason", prompt: "Only when outcome is declined. Null otherwise.", values: ["advice_only", "out_of_area", "timeline", "budget", "out_of_scope_type", "too_small", "other"], nullable: true },
+  { name: "doubts", prompt: "Anything the designer should check: unclear decision-maker, a repeat caller, an area not on the confirmed list, a rented flat. For a complaint, include the designer's name written like 'designer Aryan'.", nullable: true },
+  { name: "language", prompt: "The main language of the call.", values: ["English", "Hindi", "Marathi", "Other"], nullable: true },
+  { name: "summary", prompt: "A summary of the call in three sentences at most.", nullable: true },
+];
+for (const d of dataPoints) if (d.name.length > 30) throw new Error(`Vaani limits data point names to 30 characters: ${d.name}`);
+const agentJson = {
+  agent_display_name: "Aangan Studio front desk (imported)",
+  config: {
+    persona: { identity: { system_prompt: body } },
+    analysis: {
+      extraction: { data_collection: { enabled: true, data_points: dataPoints }, collect_concerns: { enabled: false } },
+    },
+  },
+};
+writeFileSync(join(OUT, "5-agent-import.json"), JSON.stringify(agentJson, null, 2) + "\n");
 
 console.log(`Built ${OUT}`);
 console.log(`  system prompt: ${body.length} characters`);
