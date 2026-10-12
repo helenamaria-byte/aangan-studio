@@ -12,6 +12,7 @@ import { isAfterHours } from "./time";
 import * as hubspot from "./clients/hubspot";
 import { sendEmail } from "./clients/resend";
 import { applyCallRecord, fetchCallRecord } from "./clients/vaani-api";
+import { assignDesigner } from "./assign";
 
 type CallRow = typeof calls.$inferSelect;
 
@@ -203,6 +204,9 @@ async function processCall(db: Db, callId: number, e: Enquiry, settings: AppSett
     await db.update(calls).set({ extractedFields: fieldsForStorage(e, repeatOfCallId) }).where(eq(calls.id, callId));
   }
 
+  // Every lead is given to a designer straight away, whether or not a consultation was booked.
+  await assignDesigner(db, callId);
+
   // 1. Complaints first: Nikhil must hear within a minute. The alert never waits on HubSpot (no contact link in it).
   if (plan.emails.includes("complaint")) {
     const to = settings.ownerEmail;
@@ -324,10 +328,10 @@ export async function finishHandoff(
   // The Cal.com webhook has not arrived yet. It will call this function again when it does.
   if (!booking) return { sent: false, pending: true, error: null };
 
-  const [designer] = booking.designerId
-    ? await db.select().from(designers).where(eq(designers.id, booking.designerId))
-    : [];
-  if (!designer) return { sent: false, pending: false, error: "Booking has no designer to send the handoff to" };
+  // The lead's own designer (given automatically) comes first. The designer Cal.com picked is the fallback.
+  const designerId = call.assignedDesignerId ?? booking.designerId;
+  const [designer] = designerId ? await db.select().from(designers).where(eq(designers.id, designerId)) : [];
+  if (!designer) return { sent: false, pending: false, error: "No designer to send the handoff to" };
 
   const e = rowToEnquiry(call);
   const f = (call.extractedFields ?? {}) as { repeatOfCallId?: number | null };
@@ -342,10 +346,18 @@ export async function finishHandoff(
 
   try {
     await withRetry(() => sendEmail(designer.email, mail), 3);
-  } catch (err) {
-    const msg = `Handoff email: ${errorMessage(err)}`;
-    await db.update(calls).set({ needsAttention: true, errorText: msg }).where(eq(calls.id, callId));
-    return { sent: false, pending: false, error: msg };
+  } catch (designerErr) {
+    // The designer's address did not accept it (for example, no sending domain is verified yet).
+    // Send it to the owner instead, so the note still reaches a person and nothing is lost.
+    const owner = (await loadSettings(db)).ownerEmail;
+    try {
+      if (!owner) throw designerErr;
+      await withRetry(() => sendEmail(owner, { ...mail, subject: `For ${designer.name}: ${mail.subject}` }), 3);
+    } catch (err) {
+      const msg = `Handoff email: ${errorMessage(err)}`;
+      await db.update(calls).set({ needsAttention: true, errorText: msg }).where(eq(calls.id, callId));
+      return { sent: false, pending: false, error: msg };
+    }
   }
   await db.update(calls).set({ handoffSentAt: new Date() }).where(eq(calls.id, callId));
   return { sent: true, pending: false, error: null };

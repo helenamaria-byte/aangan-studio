@@ -137,10 +137,10 @@ export function normalizeDeclineReason(v: unknown): DeclineReason | null {
   if (exact) return exact;
   const t = str(v)?.toLowerCase();
   if (!t) return null;
-  if (/restaurant|hotel|retail|shop|gym|hospitality|structural|architect|vastu|furniture only|out of scope/.test(t)) return "out_of_scope_type";
+  if (/restaurant|hotel|retail|\bshop|\bgym|hospitality|structural|architect|vastu|furniture only|out of scope/.test(t)) return "out_of_scope_type";
   if (/nashik|mumbai|outside (the )?(pune|service|our)|out of (the )?(service )?area|not in pune|other city|beyond (pune|pcmc)/.test(t)) return "out_of_area";
   if (/advice|ideas|suggestion|styling|decor|consultation only|just looking/.test(t)) return "advice_only";
-  if (/timeline|too soon|short notice|urgent|deadline|weeks?/.test(t)) return "timeline";
+  if (/timeline|too soon|short notice|urgent|deadline|\bweeks?\b/.test(t)) return "timeline";
   if (/budget|too low|afford|too little/.test(t)) return "budget";
   if (/too small|minimum|below (our )?(minimum|scope)|small(er)? (space|project)/.test(t)) return "too_small";
   return "other";

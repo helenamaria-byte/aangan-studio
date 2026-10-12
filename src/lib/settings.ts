@@ -4,11 +4,15 @@ import { DEFAULT_OFFICE_HOURS, type OfficeHours } from "./time";
 
 export type Db = Database;
 
-export type Role = "owner" | "front_desk";
+export type Role = "owner" | "front_desk" | "designer";
 
 export interface AppUser {
   email: string;
   role: Role;
+  /** Shown in the header. Designers use their own name; others a plain role label. */
+  name?: string;
+  /** Set for designers: which designer record they are. They see only the leads given to them. */
+  designerId?: number;
 }
 
 export const FIXED_COST_KEYS = ["vercel", "neon", "hubspot", "calcom", "resend"] as const;

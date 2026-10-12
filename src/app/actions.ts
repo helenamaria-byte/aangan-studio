@@ -7,9 +7,11 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { calls, designers, settings } from "@/db/schema";
 import { sendEmail } from "@/lib/clients/resend";
-import { createLoginToken, findUser, requireUser, SESSION_COOKIE } from "@/lib/auth";
+import { assignDesigner } from "@/lib/assign";
+import { createLoginToken, findUser, requireUser, SESSION_COOKIE, VIEW_AS_COOKIE } from "@/lib/auth";
 import { retryCall } from "@/lib/pipeline";
 import { FIXED_COST_KEYS, type AppUser } from "@/lib/settings";
+import { OUTCOME_LABELS } from "@/lib/stats";
 
 // Every action checks the signed-in user first. Never trust that a page hid the button.
 
@@ -44,23 +46,76 @@ export async function logout() {
   redirect("/login");
 }
 
+/** A designer may only touch leads given to them. The owner and front desk may touch any. */
+async function callFor(user: AppUser, id: number) {
+  const [row] = await (await getDb()).select().from(calls).where(eq(calls.id, id));
+  if (!row) return null;
+  if (user.role === "designer" && row.assignedDesignerId !== user.designerId) return null;
+  return row;
+}
+
 export async function markHandled(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const id = Number(formData.get("id"));
-  if (!Number.isInteger(id)) return;
-  await (await getDb())
-    .update(calls)
-    .set({ needsAttention: false, handledAt: new Date() })
-    .where(eq(calls.id, id));
+  if (!Number.isInteger(id) || !(await callFor(user, id))) return;
+  await (await getDb()).update(calls).set({ needsAttention: false, handledAt: new Date() }).where(eq(calls.id, id));
   revalidatePath("/", "layout");
 }
 
 export async function retryFailed(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
+  if (user.role === "designer") return; // sending and syncing is for the owner and front desk
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return;
   await retryCall(await getDb(), id);
   revalidatePath("/", "layout");
+}
+
+/** The category dropdown on every lead. */
+export async function setOutcome(formData: FormData) {
+  const user = await requireUser();
+  const id = Number(formData.get("id"));
+  const outcome = String(formData.get("outcome") ?? "");
+  if (!Number.isInteger(id) || !Object.keys(OUTCOME_LABELS).includes(outcome)) return;
+  if (!(await callFor(user, id))) return;
+
+  const db = await getDb();
+  // Leads and complaints still need a person. Everything else is settled once someone has categorised it.
+  const needsAPerson = outcome === "qualified_no_booking" || outcome === "complaint";
+  await db
+    .update(calls)
+    .set(needsAPerson ? { outcome, needsAttention: true, handledAt: null } : { outcome, needsAttention: false, errorText: null, handledAt: new Date() })
+    .where(eq(calls.id, id));
+  await assignDesigner(db, id); // a call that has become a lead gets a designer
+  revalidatePath("/", "layout");
+}
+
+/** Owner and front desk: hand a lead to a different designer. */
+export async function setDesigner(formData: FormData) {
+  const user = await requireUser();
+  if (user.role === "designer") return;
+  const id = Number(formData.get("id"));
+  const designerId = Number(formData.get("designerId"));
+  if (!Number.isInteger(id) || !Number.isInteger(designerId) || designerId <= 0) return;
+  const db = await getDb();
+  const [d] = await db.select().from(designers).where(eq(designers.id, designerId));
+  if (!d) return;
+  await db.update(calls).set({ assignedDesignerId: designerId }).where(eq(calls.id, id));
+  revalidatePath("/", "layout");
+}
+
+/** Owner only: look at the dashboard as one of the designers sees it. */
+export async function switchView(formData: FormData) {
+  await requireUser("owner");
+  const id = Number(formData.get("designerId"));
+  const store = await cookies();
+  if (!Number.isInteger(id) || id <= 0) store.delete(VIEW_AS_COOKIE);
+  else {
+    const [d] = await (await getDb()).select().from(designers).where(eq(designers.id, id));
+    if (d) store.set(VIEW_AS_COOKIE, String(id), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 7 * 86_400 });
+  }
+  revalidatePath("/", "layout");
+  redirect("/studio");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -136,6 +191,15 @@ export async function addDesigner(formData: FormData) {
   const email = text(formData.get("email")).toLowerCase();
   if (!name || !/^\S+@\S+\.\S+$/.test(email)) redirect("/settings?error=designer");
   await (await getDb()).insert(designers).values({ name, email });
+  done("designers");
+}
+
+export async function saveDesignerEmail(formData: FormData) {
+  await requireUser("owner");
+  const id = Number(formData.get("id"));
+  const email = text(formData.get("email")).toLowerCase();
+  if (!Number.isInteger(id) || !/^\S+@\S+\.\S+$/.test(email)) redirect("/settings?error=designer");
+  await (await getDb()).update(designers).set({ email }).where(eq(designers.id, id));
   done("designers");
 }
 

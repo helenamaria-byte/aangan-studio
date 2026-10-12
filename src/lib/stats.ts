@@ -31,6 +31,7 @@ export interface CallView {
   errorText: string | null;
   hubspotDealId: string | null;
   hubspotContactId: string | null;
+  assignedDesignerId: number | null;
   recordingUrl: string | null;
   transcriptUrl: string | null;
 }
@@ -62,6 +63,7 @@ export function toCallView(r: CallRow): CallView {
     errorText: r.errorText,
     hubspotDealId: r.hubspotDealId,
     hubspotContactId: r.hubspotContactId,
+    assignedDesignerId: r.assignedDesignerId ?? null,
     recordingUrl: r.recordingUrl,
     transcriptUrl: r.transcriptUrl,
   };
@@ -124,16 +126,32 @@ export function homeStats(all: CallView[], settings: AppSettings, period: Period
 // ---------------------------------------------------------------------------------------------
 
 export type AttentionKind = "complaint" | "no_booking" | "callback" | "failure";
+export type Audience = "owner" | "front_desk" | "designer";
 
 export interface AttentionItem {
   call: CallView;
   kind: AttentionKind;
+  /** Plain words for a person. Technical details never appear here. */
   message: string;
 }
 
 const HANDOFF_GRACE_MS = 5 * 60_000;
 
-export function attentionItems(all: CallView[], now: Date): AttentionItem[] {
+/** A detail that is simply missing is not a problem to show anyone. */
+const isMissingDetail = (t: string | null) => Boolean(t && /^No caller phone number|^Call outcome could not be read/.test(t));
+
+function failureMessage(c: CallView, stale: boolean): string | null {
+  if (isMissingDetail(c.errorText) && !stale) return null;
+  if (c.errorText?.startsWith("Could not read this call")) return "A call could not be read. Please open it";
+  if (stale || /^Handoff/i.test(c.errorText ?? "")) return "The designer's note has not gone out yet";
+  return "Something did not go out. Try again";
+}
+
+/**
+ * What needs a person, written for that person. Owners see everything. The front desk sees complaints, leads and
+ * callbacks. A designer sees only new leads of their own. Raw errors are never shown here.
+ */
+export function attentionItems(all: CallView[], now: Date, audience: Audience = "owner"): AttentionItem[] {
   const items: AttentionItem[] = [];
   for (const c of all) {
     if (c.handledAt) continue;
@@ -144,22 +162,50 @@ export function attentionItems(all: CallView[], now: Date): AttentionItem[] {
     if (!c.needsAttention && !staleHandoff) continue;
 
     if (c.outcome === "complaint") {
-      items.push({ call: c, kind: "complaint", message: "Complaint from an existing client. Not yet handled" });
+      if (audience !== "designer") items.push({ call: c, kind: "complaint", message: "Complaint from an existing client" });
     } else if (c.outcome === "qualified_no_booking") {
-      items.push({ call: c, kind: "no_booking", message: "Qualified lead with no booking yet" });
+      items.push({ call: c, kind: "no_booking", message: "New lead. No consultation booked yet" });
     } else if (c.outcome === "dropped") {
-      items.push({ call: c, kind: "callback", message: "Call dropped. Needs a callback" });
-    } else {
-      items.push({
-        call: c,
-        kind: "failure",
-        message: c.errorText ?? "The designer has not received the handoff email yet",
-      });
+      // Only worth showing when there is a number to ring back.
+      if (audience !== "designer" && c.callerPhone) items.push({ call: c, kind: "callback", message: "Missed call. Worth a quick callback" });
+    } else if (audience === "owner") {
+      const message = failureMessage(c, staleHandoff);
+      if (message) items.push({ call: c, kind: "failure", message });
     }
   }
   // Complaints first, then oldest first, so nothing waits quietly at the bottom.
   const rank: Record<AttentionKind, number> = { complaint: 0, failure: 1, no_booking: 2, callback: 3 };
   return items.sort((a, b) => rank[a.kind] - rank[b.kind] || a.call.startedAt.getTime() - b.call.startedAt.getTime());
+}
+
+/** Keep only the leads given to one designer. null means everything. */
+export function scopeCalls(all: CallView[], designerId: number | null): CallView[] {
+  return designerId === null ? all : all.filter((c) => c.assignedDesignerId === designerId);
+}
+
+// ---------------------------------------------------------------------------------------------
+// A designer's own numbers
+// ---------------------------------------------------------------------------------------------
+
+export interface DesignerStats {
+  label: string;
+  leads: number;
+  booked: number;
+  waiting: number;
+}
+
+/** Counts for one designer's leads (pass the calls already limited to them). */
+export function designerStats(mine: CallView[], period: Period, now: Date): DesignerStats {
+  const r = periodRange(period, now);
+  const inPeriod = mine.filter((c) => inRange(c.startedAt, r.start, new Date(r.end.getTime() + 1)));
+  const leads = inPeriod.filter((c) => c.outcome === "qualified_booked" || c.outcome === "qualified_no_booking");
+  return {
+    label: r.label,
+    leads: leads.length,
+    booked: leads.filter((c) => c.outcome === "qualified_booked").length,
+    // Leads still waiting for a consultation to be booked, whenever they came in.
+    waiting: mine.filter((c) => c.outcome === "qualified_no_booking" && !c.handledAt).length,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------

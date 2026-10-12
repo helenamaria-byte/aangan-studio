@@ -1,18 +1,26 @@
 import Link from "next/link";
 import { CallList } from "@/components/call-list";
-import { buttonPrimary, buttonQuiet, inputClass } from "@/components/ui";
+import { buttonPrimary, buttonQuiet, card, inputClass } from "@/components/ui";
 import { parseCallFilters } from "@/lib/params";
 import { filterCalls, OUTCOME_LABELS, type CallView } from "@/lib/stats";
 
 const PAGE = 50;
 
-/** The calls list of the signed-in dashboard. */
+/** The calls list. `all` is already limited to what this person may see. */
 export function CallsView({
   all,
   sp,
+  title,
+  designerNames,
+  canEdit,
+  canExport,
 }: {
   all: CallView[];
   sp: Record<string, string | string[] | undefined>;
+  title: string;
+  designerNames?: Record<number, string>;
+  canEdit: boolean;
+  canExport: boolean;
 }) {
   const f = parseCallFilters(sp);
   const page = Math.max(1, Number(Array.isArray(sp.page) ? sp.page[0] : sp.page) || 1);
@@ -29,27 +37,29 @@ export function CallsView({
   const hasFilters = filterQs.size > 0;
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex items-baseline justify-between gap-4">
-        <h1 className="text-4xl font-medium">All calls</h1>
-        <a href={exportHref} className="text-sm text-accent hover:underline" download>
-          Download as spreadsheet
-        </a>
+        <h1 className="text-[2.4rem] font-medium leading-tight">{title}</h1>
+        {canExport && (
+          <a href={exportHref} className="text-sm text-accent hover:underline" download>
+            Download as spreadsheet
+          </a>
+        )}
       </div>
 
-      <form action="/calls" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-6" role="search">
-        <div className="col-span-2 sm:col-span-6">
+      <form action="/calls" role="search" className={`${card} grid gap-3 p-4 sm:grid-cols-[1fr_auto_auto_auto_auto]`}>
+        <div>
           <label htmlFor="q" className="sr-only">
             Search by name, number or area
           </label>
           <input id="q" name="q" defaultValue={f.raw.q} placeholder="Search by name, number or area" className={inputClass} />
         </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="outcome" className="mb-1 block text-sm text-muted">
-            What happened
+        <div>
+          <label htmlFor="outcome" className="sr-only">
+            Category
           </label>
           <select id="outcome" name="outcome" defaultValue={f.raw.outcome} className={inputClass}>
-            <option value="">All</option>
+            <option value="">All categories</option>
             {Object.entries(OUTCOME_LABELS).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
@@ -57,8 +67,8 @@ export function CallsView({
             ))}
           </select>
         </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="hours" className="mb-1 block text-sm text-muted">
+        <div>
+          <label htmlFor="hours" className="sr-only">
             Time of day
           </label>
           <select id="hours" name="hours" defaultValue={f.raw.hours} className={inputClass}>
@@ -67,23 +77,23 @@ export function CallsView({
             <option value="after">After hours</option>
           </select>
         </div>
-        <div className="sm:col-span-1">
-          <label htmlFor="from" className="mb-1 block text-sm text-muted">
+        <div>
+          <label htmlFor="from" className="sr-only">
             From
           </label>
-          <input id="from" name="from" type="date" defaultValue={f.raw.from} className={inputClass} />
+          <input id="from" name="from" type="date" defaultValue={f.raw.from} className={inputClass} aria-label="From date" />
         </div>
-        <div className="sm:col-span-1">
-          <label htmlFor="to" className="mb-1 block text-sm text-muted">
+        <div>
+          <label htmlFor="to" className="sr-only">
             To
           </label>
-          <input id="to" name="to" type="date" defaultValue={f.raw.to} className={inputClass} />
+          <input id="to" name="to" type="date" defaultValue={f.raw.to} className={inputClass} aria-label="To date" />
         </div>
-        <div className="col-span-2 flex items-center gap-2 sm:col-span-6">
-          <button className={buttonPrimary}>Show calls</button>
+        <div className="flex items-center gap-2 sm:col-span-5">
+          <button className={buttonPrimary}>Show</button>
           {hasFilters && (
             <Link href="/calls" className={buttonQuiet}>
-              Clear filters
+              Clear
             </Link>
           )}
           <span className="ml-auto text-sm text-muted" aria-live="polite">
@@ -92,23 +102,33 @@ export function CallsView({
         </div>
       </form>
 
-      <div className="mt-4 border-t border-text/10">
-        {shown.length === 0 ? (
-          <p className="py-8 text-muted">
-            {hasFilters ? "No calls match these filters. Try clearing one of them." : "No calls yet. They will appear here as soon as the agent answers one."}
-          </p>
-        ) : (
-          <CallList calls={shown} />
-        )}
-      </div>
+      {shown.length === 0 ? (
+        <p className={`${card} px-5 py-6 text-muted`}>{hasFilters ? "Nothing matches these filters. Try clearing one." : "Nothing here yet."}</p>
+      ) : (
+        <div className={`${card} px-5`}>
+          <CallList calls={shown} canEdit={canEdit} designerNames={designerNames} />
+        </div>
+      )}
 
       {rows.length > PAGE && (
-        <nav aria-label="Pages" className="mt-4 flex items-center justify-between text-sm">
-          {page > 1 ? <Link href={pageHref(page - 1)} className="text-accent hover:underline">Newer</Link> : <span />}
+        <nav aria-label="Pages" className="flex items-center justify-between text-sm">
+          {page > 1 ? (
+            <Link href={pageHref(page - 1)} className="text-accent hover:underline">
+              Newer
+            </Link>
+          ) : (
+            <span />
+          )}
           <span className="text-muted">
             Page {page} of {Math.ceil(rows.length / PAGE)}
           </span>
-          {page * PAGE < rows.length ? <Link href={pageHref(page + 1)} className="text-accent hover:underline">Older</Link> : <span />}
+          {page * PAGE < rows.length ? (
+            <Link href={pageHref(page + 1)} className="text-accent hover:underline">
+              Older
+            </Link>
+          ) : (
+            <span />
+          )}
         </nav>
       )}
     </div>

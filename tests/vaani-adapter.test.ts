@@ -119,6 +119,12 @@ describe("what real web calls actually sent", () => {
     expect(normalizeDeclineReason(text)).toBe(expected);
   });
 
+  it("really does recognise a shop, a gym and a deadline in weeks (the word-boundary patterns work)", () => {
+    expect(normalizeDeclineReason("They want a retail shop designed")).toBe("out_of_scope_type");
+    expect(normalizeDeclineReason("They want a gym designed")).toBe("out_of_scope_type");
+    expect(normalizeDeclineReason("They need everything finished in 3 weeks")).toBe("timeline");
+  });
+
   it("does not mistake 'weekend' or 'workshop' for a timeline or a shop", () => {
     expect(normalizeDeclineReason("Calls only on the weekend")).toBe("other");
     expect(normalizeDeclineReason("A woodworking workshop")).toBe("other");

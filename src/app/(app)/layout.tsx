@@ -1,53 +1,44 @@
-import Link from "next/link";
-import { ArchMark, Wordmark } from "@/components/brand";
+import { getDb } from "@/db";
+import { Wordmark } from "@/components/brand";
 import { NavLinks } from "@/components/nav-links";
-import { logout } from "@/app/actions";
+import { ViewAsSelect } from "@/components/view-as-select";
+import { WhoAmI } from "@/components/who-am-i";
 import { requireViewer } from "@/lib/auth";
+import { getDesigners } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireViewer();
+  const viewer = await requireViewer();
+
+  // What each person can open. A designer sees their own leads; the owner can also preview a designer's view.
   const links = [
-    { href: "/studio", label: "Home" },
-    { href: "/calls", label: "Calls" },
-    ...(user.role === "owner" ? [{ href: "/reports", label: "Reports" }] : []),
-    ...(user.role === "owner" && !user.anonymous ? [{ href: "/settings", label: "Settings" }] : []),
+    { href: "/studio", label: viewer.role === "designer" ? "My leads" : "Home" },
+    { href: "/calls", label: viewer.role === "designer" ? "My calls" : "Calls" },
+    ...(viewer.role === "owner" ? [{ href: "/reports", label: "Reports" }] : []),
+    ...(viewer.role === "owner" && !viewer.anonymous ? [{ href: "/settings", label: "Settings" }] : []),
   ];
 
+  const canSwitch = viewer.realRole === "owner" && !viewer.anonymous;
+  const designers = canSwitch ? (await getDesigners(await getDb())).filter((d) => d.active) : [];
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-16">
-      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-4 pt-7">
+    <div className="mx-auto w-full max-w-4xl px-5 pb-20">
+      <header className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 pb-5 pt-8">
         <Wordmark />
-        <nav aria-label="Main" className="flex items-center text-base">
-          <NavLinks links={links} />
-          {user.anonymous ? (
-            <Link href="/login" className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm text-muted hover:text-text">
-              Sign in
-            </Link>
-          ) : (
-            <form action={logout}>
-              <button className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm text-muted hover:text-text" title={user.email}>
-                Sign out
-              </button>
-            </form>
-          )}
-        </nav>
+        <WhoAmI viewer={viewer} />
       </header>
-      <div className="brass-rule mb-6" aria-hidden />
-      {user.anonymous && (
-        <p role="note" className="mb-6 rounded-lg bg-text/5 px-4 py-3 text-sm text-muted">
-          You are looking without signing in, so this view is read-only. Sign in to change anything.
-        </p>
-      )}
-      <main className="dash-enter">{children}</main>
-      <footer className="mt-16">
-        <div className="brass-rule" aria-hidden />
-        <div className="mt-6 flex flex-col items-center gap-2 text-center">
-          <ArchMark size={26} />
-          <p className="font-display text-lg italic text-muted">Aangan Studio · interior design, Pune</p>
-        </div>
-      </footer>
+
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-text/10 pb-3">
+        <nav aria-label="Main" className="-ml-2.5 flex items-center text-base">
+          <NavLinks links={links} />
+        </nav>
+        {canSwitch && designers.length > 0 && <ViewAsSelect designers={designers} current={viewer.viewingAs?.id ?? null} />}
+      </div>
+
+      <main className="dash-enter pt-10">{children}</main>
+
+      <footer className="mt-20 border-t border-text/10 pt-6 text-center text-sm text-muted">Aangan Studio · Pune</footer>
     </div>
   );
 }

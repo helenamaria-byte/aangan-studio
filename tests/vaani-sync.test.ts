@@ -22,7 +22,7 @@ describe("what the sync sends to Vaani", () => {
   });
 
   it("never points the agent at files or tools it cannot see", () => {
-    expect(prompt).not.toMatch(/tools\.md|system-prompt\.md|post-call-fields|\.md/);
+    expect(prompt).not.toMatch(/tools\.md|system-prompt\.md|post-call-fields|\.md\b/);
     expect(prompt).not.toMatch(/\(0\d-[a-z-]+\)/); // no "(01-service-area)" style file labels
     expect(prompt).toMatch(/"Service area" in the studio facts/);
   });

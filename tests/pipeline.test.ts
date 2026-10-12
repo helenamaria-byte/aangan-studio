@@ -29,6 +29,7 @@ let sent: Sent[] = [];
 let existingContact: string | null = null; // HubSpot already has this phone number
 let hubspotDown = false;
 let resendDown = false;
+let rejectAddress: string | null = null; // Resend refuses mail to this one address (like a sandbox that only allows the owner)
 let missingDeclineProperty = false; // the custom HubSpot property has not been created yet
 let vaaniHistory: Record<string, unknown>[] = []; // rows returned by the fake Vaani call-history API
 
@@ -43,6 +44,7 @@ function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Respon
   }
   if (url.includes("api.resend.com")) {
     sent.push({ kind: "email", method, url, body });
+    if (rejectAddress && (body.to as string[]).includes(rejectAddress)) return json({ message: "not allowed" }, 403);
     return resendDown ? json({ message: "down" }, 500) : json({ id: "e1" });
   }
   sent.push({ kind: "hubspot", method, url, body });
@@ -96,6 +98,7 @@ beforeEach(async () => {
   existingContact = null;
   hubspotDown = false;
   resendDown = false;
+  rejectAddress = null;
   missingDeclineProperty = false;
   vaaniHistory = [];
   delete process.env.VAANI_API_KEY;
@@ -330,6 +333,59 @@ describe("Vaani's real call_postprocessing event", () => {
     expect(row.needsAttention).toBe(true);
     expect(row.errorText).toMatch(/Vaani call history/);
   }, 15_000);
+});
+
+describe("leads go to their own designer", () => {
+  const team = async () => {
+    const db = await getDb();
+    await db.insert(designers).values([
+      { name: "Designer Deekshit", email: "deekshit@example.test" },
+      { name: "Designer Jennifer", email: "jennifer@example.test" },
+    ]);
+    return db;
+  };
+
+  it("a booked lead is given to a designer, and the handoff goes to THAT designer, not to whoever Cal.com picked", async () => {
+    const db = await team();
+    await ingestCalcom(db, calcomBooking("+919800000001")); // Cal.com's organizer becomes a third designer record
+    await ingestVaaniCall(db, fixture("T01"));
+    const [row] = await db.select().from(calls);
+    const [deekshit] = await db.select().from(designers).where(eq(designers.email, "deekshit@example.test"));
+    expect(row.assignedDesignerId).toBe(deekshit.id);
+    expect(recipients()).toEqual(["deekshit@example.test"]);
+    expect(String(emails()[0].body.text)).toMatch(/Hi Designer Deekshit/);
+  });
+
+  it("the next lead goes to the next designer", async () => {
+    const db = await team();
+    await ingestVaaniCall(db, fixture("X03-no-booking", { call_id: "lead-a" }));
+    const p = fixture("X03-no-booking", { call_id: "lead-b" });
+    p.analysis = { ...p.analysis, caller_phone: "+919811110000" };
+    await ingestVaaniCall(db, p);
+    const rows = await db.select().from(calls);
+    expect(new Set(rows.map((r) => r.assignedDesignerId)).size).toBe(2);
+  });
+
+  it("if the designer's address cannot receive mail, the note goes to the owner instead, and nothing is flagged", async () => {
+    const db = await team();
+    rejectAddress = "deekshit@example.test";
+    await ingestCalcom(db, calcomBooking("+919800000001"));
+    await ingestVaaniCall(db, fixture("T01"));
+    const [row] = await db.select().from(calls);
+    expect(row.handoffSentAt).not.toBeNull();
+    expect(row.errorText).toBeNull();
+    expect(row.needsAttention).toBe(false);
+    expect(recipients()).toContain("nikhil@example.test");
+    const copy = emails().find((e) => (e.body.to as string[])[0] === "nikhil@example.test")!;
+    expect(copy.body.subject).toMatch(/^For Designer Deekshit: New consultation/);
+  }, 15_000);
+
+  it("complaints and declined calls are never given to a designer", async () => {
+    const db = await team();
+    await ingestVaaniCall(db, fixture("T09"));
+    await ingestVaaniCall(db, fixture("T03"));
+    for (const r of await db.select().from(calls)) expect(r.assignedDesignerId).toBeNull();
+  });
 });
 
 describe("designer handoff: either webhook can arrive first", () => {

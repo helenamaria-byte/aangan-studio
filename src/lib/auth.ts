@@ -2,6 +2,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db";
+import { and, eq } from "drizzle-orm";
+import { designers } from "@/db/schema";
 import { loadSettings, type AppUser, type Role } from "./settings";
 
 // Email magic links, no password. Stateless: the link and the session cookie are both HMAC-signed with AUTH_SECRET.
@@ -59,9 +61,23 @@ export const sessionCookieOptions = {
 };
 export { SESSION_COOKIE };
 
+/** helena_maria@school.co -> "Helena Maria". Used to greet people who are not designers. */
+export function nameFromEmail(email: string): string {
+  const local = email.split("@")[0].replace(/[._-]+/g, " ").replace(/\d+/g, "").trim();
+  return local ? local.replace(/(^|\s)[a-z]/g, (c) => c.toUpperCase()) : email;
+}
+
+const ROLE_NAME: Record<Role, string> = { owner: "Owner", front_desk: "Front desk", designer: "Designer" };
+
 export async function findUser(email: string): Promise<AppUser | null> {
-  const settings = await loadSettings(await getDb());
-  return settings.users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
+  const db = await getDb();
+  const wanted = email.toLowerCase();
+  const settings = await loadSettings(db);
+  const listed = settings.users.find((u) => u.email.toLowerCase() === wanted);
+  if (listed) return { ...listed, name: nameFromEmail(listed.email) };
+  // A designer may sign in with the email on their designer record, while they are switched on.
+  const [d] = await db.select().from(designers).where(and(eq(designers.email, wanted), eq(designers.active, true)));
+  return d ? { email: wanted, role: "designer", name: d.name, designerId: d.id } : null;
 }
 
 /** The signed-in user, or null. Reads the cookie, then confirms the person is still on the allowed list. */
@@ -71,22 +87,63 @@ export async function getSession(): Promise<AppUser | null> {
   return email ? findUser(email) : null;
 }
 
-export type Viewer = AppUser & { anonymous?: boolean };
+export const VIEW_AS_COOKIE = "aangan_view_as";
 
 /**
  * Open viewing: unless REQUIRE_LOGIN=true, a visitor who is not signed in may LOOK at Home, Calls and Reports
  * (shown as an owner would see them, read-only). Settings, every button that changes something, and the
  * spreadsheet download still need a real sign-in. Set REQUIRE_LOGIN=true in Vercel to lock everything.
  */
-export function viewerFor(session: AppUser | null, requireLogin: boolean): Viewer | null {
+export function viewerFor(session: AppUser | null, requireLogin: boolean): (AppUser & { anonymous?: boolean }) | null {
   if (session) return session;
   if (requireLogin) return null;
   return { email: "visitor", role: "owner", anonymous: true };
 }
 
+/** Who is looking, and what they are allowed to see. */
+export interface Viewer extends AppUser {
+  name: string;
+  anonymous?: boolean;
+  /** Only leads given to this designer are shown. null means everything. */
+  scopeDesignerId: number | null;
+  /** The role this person really has. The owner can look as a designer; then `role` is "designer" but this stays "owner". */
+  realRole: Role;
+  /** Set when the owner is looking as one of the designers. */
+  viewingAs: { id: number; name: string } | null;
+}
+
+/** Pure, so every rule can be tested. `viewAs` only has any effect for a signed-in owner. */
+export function resolveViewer(
+  session: AppUser | null,
+  requireLogin: boolean,
+  viewAs: { id: number; name: string } | null,
+): Viewer | null {
+  const base = viewerFor(session, requireLogin);
+  if (!base) return null;
+  const anonymous = Boolean(base.anonymous);
+  const name = base.name ?? (anonymous ? "Guest" : ROLE_NAME[base.role]);
+
+  if (base.role === "designer") {
+    return { ...base, name, realRole: "designer", scopeDesignerId: base.designerId ?? null, viewingAs: null };
+  }
+  if (base.role === "owner" && !anonymous && viewAs) {
+    return { ...base, name, role: "designer", realRole: "owner", scopeDesignerId: viewAs.id, viewingAs: viewAs };
+  }
+  return { ...base, name, realRole: base.role, scopeDesignerId: null, viewingAs: null };
+}
+
 /** For pages that may be viewed without signing in. Never use this in a server action. */
 export async function requireViewer(): Promise<Viewer> {
-  const viewer = viewerFor(await getSession(), process.env.REQUIRE_LOGIN === "true");
+  const session = await getSession();
+  let viewAs: { id: number; name: string } | null = null;
+  if (session?.role === "owner") {
+    const id = Number((await cookies()).get(VIEW_AS_COOKIE)?.value);
+    if (Number.isInteger(id) && id > 0) {
+      const [d] = await (await getDb()).select().from(designers).where(and(eq(designers.id, id), eq(designers.active, true)));
+      if (d) viewAs = { id: d.id, name: d.name };
+    }
+  }
+  const viewer = resolveViewer(session, process.env.REQUIRE_LOGIN === "true", viewAs);
   if (!viewer) redirect("/login");
   return viewer;
 }

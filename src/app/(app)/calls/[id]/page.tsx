@@ -2,146 +2,182 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db";
 import { markHandled, retryFailed } from "@/app/actions";
-import { OutcomeBadge, buttonPrimary, buttonQuiet } from "@/components/ui";
+import { displayName } from "@/components/call-list";
+import { DesignerSelect } from "@/components/designer-select";
+import { StatusSelect } from "@/components/status-select";
+import { OutcomeBadge, SectionTitle, buttonPrimary, buttonQuiet, card } from "@/components/ui";
 import { requireViewer } from "@/lib/auth";
-import { dealUrl, contactUrl } from "@/lib/clients/hubspot";
-import { buildComplaintEmail, buildFrontDeskEmail, buildHandoffEmail } from "@/lib/emails";
+import { dealUrl } from "@/lib/clients/hubspot";
 import { formatDuration, formatInr } from "@/lib/format";
-import { rowToEnquiry } from "@/lib/pipeline";
-import { getCallDetail } from "@/lib/queries";
+import { getCallDetail, getDesigners } from "@/lib/queries";
 import { formatIst } from "@/lib/time";
 
+const DECISION: Record<string, string> = {
+  yes: "The caller decides",
+  represented: "Calling for the person who decides. Ask them to come to the consultation",
+  unclear: "To be confirmed at the consultation",
+};
+
+/** One labelled line. Nothing is rendered when there is nothing to show, so a missing detail never appears. */
+function Line({ label, children }: { label: string; children: React.ReactNode }) {
+  if (children === null || children === undefined || children === false || children === "") return null;
+  return (
+    <div className="grid gap-1 py-3 sm:grid-cols-[10rem_1fr] sm:gap-4">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
 export default async function CallDetail({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requireViewer();
+  const viewer = await requireViewer();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
 
-  const detail = await getCallDetail(await getDb(), id);
+  const db = await getDb();
+  const detail = await getCallDetail(db, id);
   if (!detail) notFound();
   const { row, view: c, bookings: bk, designers } = detail;
+  // A designer opens only the leads given to them.
+  if (viewer.scopeDesignerId !== null && c.assignedDesignerId !== viewer.scopeDesignerId) notFound();
+
+  const f = (row.extractedFields ?? {}) as Record<string, unknown>;
+  const text = (k: string) => (typeof f[k] === "string" && (f[k] as string).trim() ? (f[k] as string).trim() : null);
+  const size = typeof f.sizeSqft === "number" ? f.sizeSqft : null;
 
   const booking = bk.find((b) => b.status !== "cancelled") ?? bk[0];
-  const designer = booking?.designerId ? designers.find((d) => d.id === booking.designerId) : undefined;
-  const enquiry = rowToEnquiry(row);
-  const repeat = Boolean((row.extractedFields as { repeatOfCallId?: number } | null)?.repeatOfCallId);
+  const assigned = designers.find((d) => d.id === c.assignedDesignerId);
+  const bookedWith = booking?.designerId ? designers.find((d) => d.id === booking.designerId) : undefined;
+  const allDesigners = (await getDesigners(db)).filter((d) => d.active);
 
-  // The note exactly as it was emailed (rebuilt from the same data and the same builder).
-  let note: { title: string; text: string } | null = null;
-  if (c.outcome === "qualified_booked" && booking) {
-    note = {
-      title: "Handoff note sent to the designer",
-      text: buildHandoffEmail({
-        e: enquiry,
-        startsAt: booking.startsAt,
-        locationType: booking.locationType === "site" || booking.locationType === "studio" ? booking.locationType : null,
-        designerName: designer?.name ?? null,
-        hubspotDealUrl: c.hubspotDealId ? dealUrl(c.hubspotDealId) : null,
-        isRepeatCaller: repeat,
-      }).text,
-    };
-  } else if (c.outcome === "qualified_no_booking") {
-    note = { title: "Note sent to the front desk", text: buildFrontDeskEmail(enquiry, c.hubspotDealId ? dealUrl(c.hubspotDealId) : null).text };
-  } else if (c.outcome === "complaint") {
-    note = { title: "Alert sent to the owner", text: buildComplaintEmail(enquiry, c.hubspotContactId ? contactUrl(c.hubspotContactId) : null).text };
-  }
+  const canEdit = !viewer.anonymous;
+  const isOwner = viewer.role === "owner" && !viewer.anonymous;
+  const canReassign = canEdit && viewer.role !== "designer";
+  const attention = c.needsAttention && !c.handledAt;
 
+  const property = [text("propertyType"), size ? `${size.toLocaleString("en-IN")} sq ft` : null].filter(Boolean).join(", ");
   const raw = (row.rawPayload ?? {}) as { transcript?: unknown };
   const transcript = typeof raw.transcript === "string" ? raw.transcript : null;
-  const open = c.needsAttention && !c.handledAt;
+  const links = [
+    c.recordingUrl && { href: c.recordingUrl, label: "Listen to the recording" },
+    c.transcriptUrl && { href: c.transcriptUrl, label: "Open the transcript" },
+    c.hubspotDealId && dealUrl(c.hubspotDealId) && { href: dealUrl(c.hubspotDealId)!, label: "Open in HubSpot" },
+  ].filter(Boolean) as { href: string; label: string }[];
 
   return (
-    <article>
-      <Link href="/calls" className="text-sm text-accent hover:underline">
-        All calls
-      </Link>
+    <article className="space-y-10">
+      <div>
+        <Link href="/calls" className="text-sm text-accent hover:underline">
+          ← All calls
+        </Link>
 
-      <header className="mt-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-4xl font-medium">{c.callerName ?? c.callerPhone ?? "Unknown caller"}</h1>
-          <OutcomeBadge outcome={c.outcome} />
-        </div>
-        <p className="mt-1 text-muted">
-          {formatIst(c.startedAt)} · {formatDuration(c.durationSec)}
-          {c.isAfterHours ? " · after hours" : ""}
-          {c.callerPhone && c.callerName ? ` · ${c.callerPhone}` : ""}
-        </p>
-      </header>
-
-      {open && (
-        <div className="mt-5 rounded-lg bg-warn/10 p-4">
-          <p className="text-warn">{c.errorText ?? "The designer has not received the handoff email yet"}</p>
-          <div className="mt-3 flex gap-2">
-            <form action={retryFailed}>
-              <input type="hidden" name="id" value={c.id} />
-              <button className={buttonPrimary}>Retry</button>
-            </form>
-            <form action={markHandled}>
-              <input type="hidden" name="id" value={c.id} />
-              <button className={buttonQuiet}>Mark handled</button>
-            </form>
+        <header className="mt-4 flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+          <div>
+            <h1 className="text-[2.4rem] font-medium leading-tight">{displayName(c)}</h1>
+            <p className="mt-1 text-muted">
+              {formatIst(c.startedAt)}
+              {c.durationSec ? ` · ${formatDuration(c.durationSec)}` : ""}
+              {c.isAfterHours ? " · after hours" : ""}
+            </p>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {canEdit ? <StatusSelect id={c.id} outcome={c.outcome} /> : <OutcomeBadge outcome={c.outcome} />}
+          </div>
+        </header>
+
+        <dl className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <dt className="text-muted">Designer</dt>
+            <dd>
+              {canReassign ? <DesignerSelect id={c.id} current={c.assignedDesignerId} designers={allDesigners} /> : (assigned?.name ?? "Not given yet")}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {attention && canEdit && viewer.role !== "designer" && (
+        <div className={`${card} flex flex-wrap items-center justify-between gap-3 px-5 py-4`}>
+          <p>{c.outcome === "complaint" ? "A complaint from an existing client. Please follow up." : "This is waiting for someone to follow up."}</p>
+          <form action={markHandled}>
+            <input type="hidden" name="id" value={c.id} />
+            <button className={buttonPrimary}>Mark handled</button>
+          </form>
         </div>
       )}
 
-      <section className="mt-6">
-        <h2 className="text-[1.7rem] font-medium">Summary</h2>
-        <p className="mt-1">{c.summary ?? "No summary was captured for this call."}</p>
-        {c.declineReason && <p className="mt-1 text-muted">Reason: {c.declineReason.replace(/_/g, " ")}</p>}
-      </section>
-
-      {note && (
-        <section className="mt-6">
-          <h2 className="text-[1.7rem] font-medium">{note.title}</h2>
-          <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-text/[0.04] p-4 font-[inherit] text-base leading-relaxed">{note.text}</pre>
+      {c.summary && (
+        <section>
+          <SectionTitle>Summary</SectionTitle>
+          <p className="mt-3 max-w-2xl text-lg leading-relaxed">{c.summary}</p>
         </section>
       )}
+
+      <section>
+        <SectionTitle>Brief</SectionTitle>
+        <dl className={`${card} mt-4 divide-y divide-text/10 px-5`}>
+          <Line label="Phone">{c.callerPhone && <a className="text-accent hover:underline" href={`tel:${c.callerPhone.replace(/\s/g, "")}`}>{c.callerPhone}</a>}</Line>
+          <Line label="Where">{text("locality")}</Line>
+          <Line label="Property">{property}</Line>
+          <Line label="What they want">{text("scopeSummary")}</Line>
+          <Line label="Timeline">{text("timelineText")}</Line>
+          <Line label="Decision-maker">{typeof f.decisionMaker === "string" ? DECISION[f.decisionMaker] : null}</Line>
+          <Line label="Budget they mentioned">{text("budgetMentioned")}</Line>
+          <Line label="To check">{text("doubts")}</Line>
+          <Line label="Language">{text("language")}</Line>
+        </dl>
+      </section>
 
       {booking && (
-        <section className="mt-6">
-          <h2 className="text-[1.7rem] font-medium">Booking</h2>
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
-            <dt className="text-muted">When</dt>
-            <dd>{formatIst(booking.startsAt)} IST</dd>
-            <dt className="text-muted">Where</dt>
-            <dd>{booking.locationType === "site" ? "Site visit" : booking.locationType === "studio" ? "At the studio" : "Not set"}</dd>
-            <dt className="text-muted">Designer</dt>
-            <dd>{designer?.name ?? "Not assigned"}</dd>
-            <dt className="text-muted">Status</dt>
-            <dd className="capitalize">{booking.status}</dd>
+        <section>
+          <SectionTitle>Consultation</SectionTitle>
+          <dl className={`${card} mt-4 divide-y divide-text/10 px-5`}>
+            <Line label="When">{formatIst(booking.startsAt)} IST</Line>
+            <Line label="Where">{booking.locationType === "site" ? "Site visit" : booking.locationType === "studio" ? "At the studio" : null}</Line>
+            <Line label="Booked with">{bookedWith?.name}</Line>
+            <Line label="Status">
+              <span className="capitalize">{booking.status}</span>
+            </Line>
           </dl>
         </section>
       )}
 
-      {user.role === "owner" && (
-        <section className="mt-6">
-          <h2 className="text-[1.7rem] font-medium">Cost of this call</h2>
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1">
-            <dt className="text-muted">Voice</dt>
-            <dd>{formatInr(c.costVoice)}</dd>
-            <dt className="text-muted">Phone line</dt>
-            <dd>{formatInr(c.costTelephony)}</dd>
-            <dt className="text-muted">AI</dt>
-            <dd>{formatInr(c.costLlm)}</dd>
-            <dt className="font-medium">Total</dt>
-            <dd className="font-medium">{formatInr(c.costTotal)}</dd>
-          </dl>
+      {links.length > 0 && (
+        <section>
+          <SectionTitle>Links</SectionTitle>
+          <ul className="mt-3 space-y-1 text-accent">
+            {links.map((l) => (
+              <li key={l.href}>
+                <a className="hover:underline" href={l.href} target="_blank" rel="noreferrer">
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
-      <section className="mt-6">
-        <h2 className="text-[1.7rem] font-medium">Links</h2>
-        <ul className="mt-2 space-y-1 text-accent">
-          {c.recordingUrl && <li><a className="hover:underline" href={c.recordingUrl} target="_blank" rel="noreferrer">Listen to the recording</a></li>}
-          {c.transcriptUrl && <li><a className="hover:underline" href={c.transcriptUrl} target="_blank" rel="noreferrer">Open the transcript</a></li>}
-          {c.hubspotDealId && dealUrl(c.hubspotDealId) && <li><a className="hover:underline" href={dealUrl(c.hubspotDealId)!} target="_blank" rel="noreferrer">Open the deal in HubSpot</a></li>}
-          {!c.recordingUrl && !c.transcriptUrl && !c.hubspotDealId && <li className="text-muted">No links for this call.</li>}
-        </ul>
-      </section>
+      {isOwner && c.costTotal > 0 && (
+        <section>
+          <SectionTitle>Cost of this call</SectionTitle>
+          <p className="mt-3">{formatInr(c.costTotal)}</p>
+        </section>
+      )}
 
       {transcript && (
-        <details className="mt-6 rounded-lg border border-text/10 p-4">
+        <details className={`${card} px-5 py-4`}>
           <summary className="cursor-pointer font-medium">Full transcript</summary>
           <pre className="mt-3 whitespace-pre-wrap font-[inherit] text-base leading-relaxed">{transcript}</pre>
+        </details>
+      )}
+
+      {isOwner && c.errorText && (
+        <details className="text-sm text-muted">
+          <summary className="cursor-pointer">Technical details</summary>
+          <p className="mt-2">{c.errorText}</p>
+          <form action={retryFailed} className="mt-3">
+            <input type="hidden" name="id" value={c.id} />
+            <button className={buttonQuiet}>Try again</button>
+          </form>
         </details>
       )}
     </article>

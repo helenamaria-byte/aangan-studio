@@ -19,12 +19,9 @@ function rng(seed: number) {
 }
 
 export const SEED_DESIGNERS: DesignerInsert[] = [
-  { name: "Aryan Kulkarni", email: "aryan@example.invalid" },
-  { name: "Mrunal Deshmukh", email: "mrunal@example.invalid" },
-  { name: "Tanvi Bhide", email: "tanvi@example.invalid" },
-  { name: "Rohan Gokhale", email: "rohan@example.invalid" },
-  { name: "Isha Pathak", email: "isha@example.invalid" },
-  { name: "Kunal Sathe", email: "kunal@example.invalid" },
+  { name: "Designer Deekshit", email: "deekshit@example.invalid" },
+  { name: "Designer Jennifer", email: "jennifer@example.invalid" },
+  { name: "Designer Daniel", email: "daniel@example.invalid" },
 ];
 
 const LOCALITIES = ["Kothrud", "Baner", "Aundh", "Wakad", "Koregaon Park", "Kalyani Nagar", "Viman Nagar", "Hadapsar", "Magarpatta", "NIBM", "Undri", "Pimple Saudagar", "Hinjewadi", "Ravet"];
@@ -37,6 +34,8 @@ export interface SeedData {
   calls: CallInsert[];
   /** callIndex points into `calls`; designerIndex into `designers`. */
   bookings: (Omit<BookingInsert, "callId" | "designerId"> & { callIndex: number; designerIndex: number })[];
+  /** For each call (same order as `calls`): the designer it goes to, or null. Leads are shared out evenly. */
+  assignments: (number | null)[];
 }
 
 export function generateSeed(now: Date, days = 35): SeedData {
@@ -156,5 +155,9 @@ export function generateSeed(now: Date, days = 35): SeedData {
   const failed = recent((c) => c.outcome === "qualified_booked");
   if (failed) Object.assign(failed, { needsAttention: true, errorText: "Handoff email: Resend 500", handoffSentAt: null });
 
-  return { designers: SEED_DESIGNERS, calls: callsOut, bookings: bookingsOut };
+  let next = 0;
+  const assignments = callsOut.map((c) =>
+    c.outcome === "qualified_booked" || c.outcome === "qualified_no_booking" ? next++ % SEED_DESIGNERS.length : null,
+  );
+  return { designers: SEED_DESIGNERS, calls: callsOut, bookings: bookingsOut, assignments };
 }

@@ -7,6 +7,8 @@ import { callsToCsv, filterCalls } from "@/lib/stats";
 export async function GET(req: Request) {
   const user = await getSession();
   if (!user) return new Response("Sign in first", { status: 401 });
+  // A spreadsheet of every caller is for the owner and the front desk. Designers see their own leads on screen.
+  if (user.role === "designer") return new Response("Not allowed", { status: 403 });
 
   const sp = Object.fromEntries(new URL(req.url).searchParams);
   const rows = filterCalls(await getAllCalls(await getDb()), parseCallFilters(sp));

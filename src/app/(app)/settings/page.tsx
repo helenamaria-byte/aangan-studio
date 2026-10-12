@@ -1,6 +1,6 @@
 import { getDb } from "@/db";
-import { addDesigner, saveEmails, saveMoney, saveOfficeHours, saveUsers, toggleDesigner } from "@/app/actions";
-import { Notice, buttonPrimary, buttonQuiet, inputClass } from "@/components/ui";
+import { addDesigner, saveDesignerEmail, saveEmails, saveMoney, saveOfficeHours, saveUsers, toggleDesigner } from "@/app/actions";
+import { Notice, buttonPrimary, buttonQuiet, card, inputClass } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { getDesigners } from "@/lib/queries";
 import { FIXED_COST_KEYS, loadSettings } from "@/lib/settings";
@@ -21,10 +21,10 @@ const ERRORS: Record<string, string> = {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-text/10 py-8">
-      <h2 className="text-[1.7rem] font-medium">{title}</h2>
-      {hint && <p className="mt-1 text-muted">{hint}</p>}
-      <div className="mt-4">{children}</div>
+    <section className={`${card} p-6`}>
+      <h2 className="text-[1.6rem] font-medium leading-tight">{title}</h2>
+      {hint && <p className="mt-1 max-w-2xl text-muted">{hint}</p>}
+      <div className="mt-5">{children}</div>
     </section>
   );
 }
@@ -47,9 +47,9 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   const [s, designers] = await Promise.all([loadSettings(db), getDesigners(db)]);
 
   return (
-    <div>
-      <h1 className="text-4xl font-medium">Settings</h1>
-      <div className="mt-4 space-y-3">
+    <div className="space-y-6">
+      <h1 className="text-[2.4rem] font-medium leading-tight">Settings</h1>
+      <div className="space-y-3">
         {saved && SAVED[saved] && <Notice tone="success">{SAVED[saved]}</Notice>}
         {error && ERRORS[error] && <Notice tone="error">{ERRORS[error]}</Notice>}
       </div>
@@ -79,13 +79,20 @@ export default async function Settings({ searchParams }: { searchParams: Promise
         </form>
       </Section>
 
-      <Section title="Designers" hint="Cal.com picks the designer. A designer is added here automatically the first time they get a booking. Turn someone off here when they leave.">
+      <Section title="Designers" hint="Every new lead goes automatically to the designer with the fewest leads so far. Turn someone off when they are away or leave. Each designer signs in with their email and sees only their own leads.">
         <ul className="divide-y divide-text/10">
           {designers.map((d) => (
-            <li key={d.id} className="flex items-center justify-between gap-3 py-2">
-              <div className="min-w-0">
-                <div className={d.active ? "" : "text-muted line-through"}>{d.name}</div>
-                <div className="truncate text-sm text-muted">{d.email}</div>
+            <li key={d.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+              <div className="min-w-0 basis-56">
+                <div className={d.active ? "font-medium" : "text-muted line-through"}>{d.name}</div>
+                <form action={saveDesignerEmail} className="mt-1 flex items-center gap-2">
+                  <input type="hidden" name="id" value={d.id} />
+                  <label htmlFor={`email-${d.id}`} className="sr-only">
+                    Email for {d.name}
+                  </label>
+                  <input id={`email-${d.id}`} name="email" type="email" defaultValue={d.email} className="w-64 max-w-full rounded-lg border border-text/10 bg-white px-2.5 py-1 text-sm" />
+                  <button className="text-sm text-accent hover:underline">Save</button>
+                </form>
               </div>
               <form action={toggleDesigner}>
                 <input type="hidden" name="id" value={d.id} />

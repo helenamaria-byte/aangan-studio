@@ -40,6 +40,8 @@ export const calls = pgTable("calls", {
   costLlmInr: numeric("cost_llm_inr", { precision: 12, scale: 2 }).default("0"),
   costEmailInr: numeric("cost_email_inr", { precision: 12, scale: 2 }).default("0"),
   costTotalInr: numeric("cost_total_inr", { precision: 12, scale: 2 }).default("0"),
+  // The designer this lead was automatically given to (fewest open leads first). Designers see only their own.
+  assignedDesignerId: integer("assigned_designer_id").references(() => designers.id),
   hubspotContactId: text("hubspot_contact_id"),
   hubspotDealId: text("hubspot_deal_id"),
   handoffSentAt: timestamp("handoff_sent_at", { withTimezone: true }),

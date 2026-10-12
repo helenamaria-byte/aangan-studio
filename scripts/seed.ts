@@ -18,7 +18,11 @@ async function main() {
 
   const insertedCalls: { id: number }[] = [];
   for (let i = 0; i < seed.calls.length; i += 50) {
-    insertedCalls.push(...(await db.insert(calls).values(seed.calls.slice(i, i + 50)).returning({ id: calls.id })));
+    const chunk = seed.calls.slice(i, i + 50).map((c, k) => {
+      const d = seed.assignments[i + k];
+      return { ...c, assignedDesignerId: d === null ? null : insertedDesigners[d].id };
+    });
+    insertedCalls.push(...(await db.insert(calls).values(chunk).returning({ id: calls.id })));
   }
 
   if (seed.bookings.length) {
